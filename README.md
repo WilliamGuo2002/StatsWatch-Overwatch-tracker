@@ -126,7 +126,7 @@ This is an **unofficial** fan-made application and is not affiliated with, endor
 
 ## Support
 
-- **Bug Report / Feature Request** — In-app Feedback & Tip page, or email [wgstudiosupport@gmail.com](mailto:wgstudiosupport@gmail.com)
+- **Bug Report / Feature Request** — Send feedback from the in-app Feedback & Tip page
 - **Tip the Developer** — [PayPal](https://paypal.me/wg1018)
 
 ---
@@ -264,7 +264,7 @@ StatsWatch **不收集、不存储、不传输任何个人数据**。所有用�
 
 ### 联系与支持
 
-- **问题反馈 / 功能建议** — App 内反馈页面，或发送邮件至 [wgstudiosupport@gmail.com](mailto:wgstudiosupport@gmail.com)
+- **问题反馈 / 功能建议** — 在 App 内的「反馈与打赏」页面直接发送
 - **打赏支持** — [PayPal](https://paypal.me/wg1018)
 
 ---
