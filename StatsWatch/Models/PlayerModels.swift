@@ -1,4 +1,5 @@
 import Foundation
+import SwiftUI
 
 // MARK: - Player Search
 struct PlayerSearchResult: Codable, Identifiable {
@@ -168,6 +169,14 @@ struct RoleStatEntry: Codable {
         case timePlayed = "time_played"
         case winrate, kda, total, average
     }
+
+    var killDeathRatio: Double? { Self.ratio(total?.eliminations, total?.deaths) }
+
+    // Zero deaths is treated as one so a deathless role still shows its raw count.
+    private static func ratio(_ numerator: Int?, _ deaths: Int?) -> Double? {
+        guard let numerator, let deaths else { return nil }
+        return Double(numerator) / Double(max(deaths, 1))
+    }
 }
 
 // MARK: - Hero Info
@@ -177,6 +186,20 @@ struct HeroInfo: Codable, Identifiable {
     let name: String
     let portrait: String?
     let role: String?
+    let subrole: String?
+}
+
+// MARK: - Platform
+enum Platform: String, CaseIterable {
+    case pc
+    case console
+
+    var displayName: LocalizedStringKey {
+        switch self {
+        case .pc: return "PC"
+        case .console: return "Console"
+        }
+    }
 }
 
 // MARK: - Game Mode
@@ -184,10 +207,10 @@ enum GameMode: String, CaseIterable {
     case quickplay = "quickplay"
     case competitive = "competitive"
 
-    var displayName: String {
+    var displayName: LocalizedStringKey {
         switch self {
-        case .quickplay: return String(localized: "Quick Play")
-        case .competitive: return String(localized: "Competitive")
+        case .quickplay: return "Quick Play"
+        case .competitive: return "Competitive"
         }
     }
 }
@@ -278,6 +301,26 @@ struct HeroDetail: Codable {
     let hitpoints: HeroHitpoints?
     let abilities: [HeroAbility]?
     let story: HeroStory?
+    let subrole: String?
+    let perks: HeroPerks?
+    let stadiumPowers: [HeroPower]?
+
+    enum CodingKeys: String, CodingKey {
+        case name, description, role, location, birthday, age, hitpoints, abilities, story, subrole, perks
+        case stadiumPowers = "stadium_powers"
+    }
+}
+
+struct HeroPerks: Codable {
+    let minor: [HeroPower]?
+    let major: [HeroPower]?
+}
+
+struct HeroPower: Codable, Identifiable {
+    var id: String { name ?? UUID().uuidString }
+    let name: String?
+    let description: String?
+    let icon: String?
 }
 
 struct HeroHitpoints: Codable {
@@ -321,6 +364,41 @@ struct HeroGlobalStat: Codable, Identifiable {
     let hero: String
     let pickrate: Double?
     let winrate: Double?
+    let banrate: Double?
+}
+
+// MARK: - Hero Comparisons (from /players/{id})
+struct PlayerFullResponse: Codable {
+    let stats: PlayerPlatformStats?
+}
+
+struct PlayerPlatformStats: Codable {
+    let pc: PlayerModeStats?
+    let console: PlayerModeStats?
+}
+
+struct PlayerModeStats: Codable {
+    let quickplay: PlayerGamemodeStats?
+    let competitive: PlayerGamemodeStats?
+}
+
+struct PlayerGamemodeStats: Codable {
+    let heroesComparisons: [String: HeroComparisonMetric]?
+
+    enum CodingKeys: String, CodingKey {
+        case heroesComparisons = "heroes_comparisons"
+    }
+}
+
+struct HeroComparisonMetric: Codable {
+    let label: String?
+    let values: [HeroComparisonValue]?
+}
+
+struct HeroComparisonValue: Codable, Identifiable {
+    var id: String { hero }
+    let hero: String
+    let value: Double
 }
 
 // MARK: - Career Stats (from /players/{id}/stats/career)
@@ -451,4 +529,84 @@ struct StatSnapshot: Codable, Identifiable {
     let damagePer10: Double
     let healingPer10: Double
     let assistsPer10: Double
+    var gamesWon: Int? = nil
+
+    var derivedGamesWon: Int {
+        gamesWon ?? Int((winrate / 100 * Double(gamesPlayed)).rounded())
+    }
+}
+
+// MARK: - Rank Snapshot
+struct RankSnapshot: Codable, Identifiable {
+    var id: String { "\(playerId)-\(date.timeIntervalSince1970)" }
+    let playerId: String
+    let date: Date
+    let season: Int?
+    let scores: [String: Int]
+}
+
+enum RankScore {
+    static let roles = ["tank", "damage", "support", "open"]
+    private static let divisions = ["bronze", "silver", "gold", "platinum", "emerald", "diamond", "master", "grandmaster", "ultimate"]
+
+    // Bronze 5 = 0, each tier +1, Champion 1 = 44.
+    static func score(_ rank: RankInfo?) -> Int? {
+        guard let division = rank?.division?.lowercased(),
+              let index = divisions.firstIndex(of: division),
+              let tier = rank?.tier, (1...5).contains(tier) else { return nil }
+        return index * 5 + (5 - tier)
+    }
+
+    static func scores(for ranks: PlatformRanks?) -> [String: Int] {
+        var result: [String: Int] = [:]
+        result["tank"] = score(ranks?.tank)
+        result["damage"] = score(ranks?.damage)
+        result["support"] = score(ranks?.support)
+        result["open"] = score(ranks?.open)
+        return result
+    }
+
+    static func divisionName(forScore score: Int) -> String {
+        let division = divisions[min(max(score / 5, 0), divisions.count - 1)]
+        return division == "ultimate" ? "Champion" : division.capitalized
+    }
+
+    static func label(forScore score: Int) -> String {
+        "\(divisionName(forScore: score)) \(5 - score % 5)"
+    }
+}
+
+// MARK: - Hero Meta Region
+enum MetaRegion: String, CaseIterable {
+    case americas
+    case europe
+    case asia
+
+    var displayName: LocalizedStringKey {
+        switch self {
+        case .americas: return "Americas"
+        case .europe: return "Europe"
+        case .asia: return "Asia"
+        }
+    }
+
+    static var preferred: MetaRegion {
+        ["ja-jp", "ko-kr", "zh-tw"].contains(APILocale.current) ? .asia : .americas
+    }
+}
+
+// MARK: - API Locale
+enum APILocale {
+    // OverFast has no Simplified Chinese, so zh-Hans falls back to Traditional.
+    static var current: String {
+        let stored = UserDefaults.standard.string(forKey: "app_language") ?? ""
+        let language = stored.isEmpty ? (Bundle.main.preferredLocalizations.first ?? "en") : stored
+        switch language.prefix(2) {
+        case "ja": return "ja-jp"
+        case "ko": return "ko-kr"
+        case "es": return "es-es"
+        case "zh": return "zh-tw"
+        default: return "en-us"
+        }
+    }
 }

@@ -1,9 +1,11 @@
 import SwiftUI
+import Charts
 
 struct ProgressTrackingView: View {
     let viewModel: PlayerViewModel
     let playerId: String
     @State private var snapshots: [StatSnapshot] = []
+    @State private var rankSnapshots: [RankSnapshot] = []
     @State private var selectedMetric: ProgressMetric = .winrate
 
     enum ProgressMetric: String, CaseIterable {
@@ -20,6 +22,10 @@ struct ProgressTrackingView: View {
     var body: some View {
         ScrollView {
             VStack(spacing: 16) {
+                if !rankSnapshots.isEmpty {
+                    RankHistorySection(snapshots: rankSnapshots)
+                }
+
                 if snapshots.count < 2 {
                     VStack(spacing: 12) {
                         Image(systemName: "chart.line.uptrend.xyaxis")
@@ -87,7 +93,8 @@ struct ProgressTrackingView: View {
         .navigationTitle("Progress Tracking")
         .navigationBarTitleDisplayMode(.inline)
         .onAppear {
-            snapshots = storage.getSnapshots(for: playerId)
+            snapshots = storage.getSnapshots(for: playerId, gamemode: viewModel.selectedMode.rawValue)
+            rankSnapshots = storage.getRankSnapshots(for: playerId)
         }
     }
 }
@@ -298,5 +305,103 @@ struct SnapshotRow: View {
         .padding(10)
         .background(.regularMaterial)
         .clipShape(RoundedRectangle(cornerRadius: 8))
+    }
+}
+
+// MARK: - Rank History
+struct RankHistorySection: View {
+    let snapshots: [RankSnapshot]
+
+    private var activeRoles: [String] {
+        RankScore.roles.filter { role in snapshots.contains { $0.scores[role] != nil } }
+    }
+
+    private var scoreRange: ClosedRange<Int> {
+        let all = snapshots.flatMap { $0.scores.values }
+        let low = ((all.min() ?? 0) / 5) * 5
+        let high = min(45, ((all.max() ?? 44) / 5) * 5 + 5)
+        return low...max(high, low + 5)
+    }
+
+    private var bandEdges: [Int] {
+        Array(stride(from: scoreRange.lowerBound, through: scoreRange.upperBound, by: 5))
+    }
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 10) {
+            HStack {
+                Image(systemName: "rosette")
+                    .foregroundStyle(.orange)
+                Text("Rank History")
+                    .font(.system(size: 16, weight: .bold))
+            }
+
+            if snapshots.count >= 2 {
+                Chart {
+                    ForEach(activeRoles, id: \.self) { role in
+                        ForEach(snapshots.filter { $0.scores[role] != nil }) { snapshot in
+                            LineMark(
+                                x: .value("Date", snapshot.date, unit: .day),
+                                y: .value("Rank", snapshot.scores[role] ?? 0),
+                                series: .value("Role", role)
+                            )
+                            .foregroundStyle(RoleStyle.color(role))
+                            PointMark(
+                                x: .value("Date", snapshot.date, unit: .day),
+                                y: .value("Rank", snapshot.scores[role] ?? 0)
+                            )
+                            .foregroundStyle(RoleStyle.color(role))
+                            .symbolSize(24)
+                        }
+                    }
+                }
+                .chartYScale(domain: scoreRange)
+                .chartYAxis {
+                    AxisMarks(values: bandEdges) { _ in
+                        AxisGridLine()
+                    }
+                    // Labels sit in the middle of each division band.
+                    AxisMarks(values: bandEdges.dropLast().map { Double($0) + 2.5 }) { value in
+                        AxisValueLabel {
+                            if let score = value.as(Double.self) {
+                                Text(LocalizedStringKey(RankScore.divisionName(forScore: Int(score))))
+                                    .font(.system(size: 9))
+                            }
+                        }
+                    }
+                }
+                .chartLegend(.hidden)
+                .frame(height: 180)
+            } else {
+                Text("Rank history builds up as you check this profile on different days.")
+                    .font(.system(size: 12))
+                    .foregroundStyle(.secondary)
+            }
+
+            if let latest = snapshots.last {
+                HStack(spacing: 12) {
+                    ForEach(activeRoles, id: \.self) { role in
+                        if let score = latest.scores[role] {
+                            HStack(spacing: 4) {
+                                Circle()
+                                    .fill(RoleStyle.color(role))
+                                    .frame(width: 7, height: 7)
+                                Text(RoleStyle.name(role))
+                                    .font(.system(size: 10))
+                                    .foregroundStyle(.secondary)
+                                Text(RankScore.localizedLabel(forScore: score))
+                                    .font(.system(size: 10, weight: .semibold))
+                            }
+                        }
+                    }
+                }
+                .lineLimit(1)
+                .minimumScaleFactor(0.7)
+            }
+        }
+        .padding(14)
+        .background(.regularMaterial)
+        .clipShape(RoundedRectangle(cornerRadius: 12))
+        .padding(.horizontal)
     }
 }

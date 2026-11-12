@@ -6,7 +6,7 @@ class PlayerViewModel {
     var searchText = ""
     var searchResults: [PlayerSearchResult] = []
     var isSearching = false
-    var searchError: String?
+    var searchError: LocalizedStringKey?
     var directLookupPlayerId: String?
 
     var playerSummary: PlayerSummary?
@@ -15,9 +15,12 @@ class PlayerViewModel {
     var heroGlobalStats: [HeroGlobalStat] = []
     var heroes: [HeroInfo] = []
     var isLoadingProfile = false
-    var profileError: String?
+    var profileError: LocalizedStringKey?
 
     var selectedMode: GameMode = .quickplay
+    var selectedPlatform: Platform?
+    var isPrivateProfile = false
+    private var heroesLocale: String?
     var showExpandedStats = false
     var currentPlayerId: String?
 
@@ -67,7 +70,7 @@ class PlayerViewModel {
                 searchError = "No players found for \"\(searchName)\""
             }
         } catch {
-            searchError = error.localizedDescription
+            searchError = APIError.from(error).message
         }
 
         isSearching = false
@@ -78,19 +81,29 @@ class PlayerViewModel {
         currentPlayerId = playerId
         isLoadingProfile = true
         profileError = nil
+        playerSummary = nil
         statsSummary = nil
+        careerStats = nil
+        showExpandedStats = false
+        selectedPlatform = nil
+        isPrivateProfile = false
 
-        async let summaryTask: () = loadSummary(playerId: playerId)
-        async let statsTask: () = loadStats(playerId: playerId)
-        async let careerTask: () = loadCareerStats(playerId: playerId)
-        async let heroesTask: () = loadHeroesIfNeeded()
+        async let heroesTask: () = ensureHeroesLoaded()
         async let globalStatsTask: () = loadHeroGlobalStats()
 
-        await summaryTask
+        await loadSummary(playerId: playerId)
+        selectedPlatform = defaultPlatform
+
+        async let statsTask: () = loadStats(playerId: playerId)
+        async let careerTask: () = loadCareerStats(playerId: playerId)
         await statsTask
         await careerTask
         await heroesTask
         await globalStatsTask
+        if playerSummary != nil, statsSummary?.general == nil {
+            isPrivateProfile = await api.isProfilePrivate(playerId: playerId, summary: playerSummary)
+        }
+        recordSnapshots(playerId: playerId)
 
         isLoadingProfile = false
     }
@@ -99,14 +112,42 @@ class PlayerViewModel {
         do {
             playerSummary = try await api.getPlayerSummary(playerId: playerId)
         } catch {
-            profileError = error.localizedDescription
+            profileError = APIError.from(error).message
         }
+    }
+
+    // MARK: - Platform
+    var availablePlatforms: [Platform] {
+        let ranks = playerSummary?.competitive
+        return ranks?.pc != nil && ranks?.console != nil ? Platform.allCases : []
+    }
+
+    var displayedRanks: PlatformRanks? {
+        let ranks = playerSummary?.competitive
+        return selectedPlatform == .console ? ranks?.console : (ranks?.pc ?? ranks?.console)
+    }
+
+    private var defaultPlatform: Platform? {
+        let ranks = playerSummary?.competitive
+        if ranks?.pc != nil { return .pc }
+        if ranks?.console != nil { return .console }
+        return nil
+    }
+
+    func switchPlatform(_ platform: Platform) async {
+        guard platform != selectedPlatform, let playerId = currentPlayerId else { return }
+        selectedPlatform = platform
+        await reloadStats(playerId: playerId)
     }
 
     // MARK: - Switch Game Mode
     func switchMode(_ mode: GameMode) async {
         guard mode != selectedMode, let playerId = currentPlayerId else { return }
         selectedMode = mode
+        await reloadStats(playerId: playerId)
+    }
+
+    private func reloadStats(playerId: String) async {
         showExpandedStats = false
         statsSummary = nil
         careerStats = nil
@@ -115,24 +156,55 @@ class PlayerViewModel {
         async let careerTask: () = loadCareerStats(playerId: playerId)
         await statsTask
         await careerTask
+        recordSnapshots(playerId: playerId)
+    }
+
+    private func recordSnapshots(playerId: String) {
+        guard currentPlayerId == playerId else { return }
+        let storage = LocalStorageService.shared
+        if let ranks = displayedRanks {
+            storage.saveRankSnapshot(RankSnapshot(
+                playerId: playerId,
+                date: Date(),
+                season: ranks.season,
+                scores: RankScore.scores(for: ranks)
+            ))
+        }
+        guard let general = statsSummary?.general else { return }
+        storage.addSnapshot(StatSnapshot(
+            id: UUID(),
+            playerId: playerId,
+            date: Date(),
+            gamemode: selectedMode.rawValue,
+            winrate: general.winrate ?? 0,
+            kda: general.kda ?? 0,
+            gamesPlayed: general.gamesPlayed ?? 0,
+            elimsPer10: general.average?.eliminations ?? 0,
+            deathsPer10: general.average?.deaths ?? 0,
+            damagePer10: general.average?.damage ?? 0,
+            healingPer10: general.average?.healing ?? 0,
+            assistsPer10: assistsPer10,
+            gamesWon: general.gamesWon
+        ))
     }
 
     private func loadStats(playerId: String) async {
         do {
             statsSummary = try await api.getPlayerStatsSummary(
                 playerId: playerId,
-                gamemode: selectedMode
+                gamemode: selectedMode,
+                platform: selectedPlatform
             )
         } catch {
             if profileError == nil {
-                profileError = error.localizedDescription
+                profileError = APIError.from(error).message
             }
         }
     }
 
     private func loadCareerStats(playerId: String) async {
         do {
-            careerStats = try await api.getPlayerCareerStats(playerId: playerId, gamemode: selectedMode)
+            careerStats = try await api.getPlayerCareerStats(playerId: playerId, gamemode: selectedMode, platform: selectedPlatform)
         } catch {
             // Non-critical, career stats are supplementary
         }
@@ -141,7 +213,7 @@ class PlayerViewModel {
     private func loadHeroGlobalStats() async {
         guard heroGlobalStats.isEmpty else { return }
         do {
-            heroGlobalStats = try await api.getHeroGlobalStats()
+            heroGlobalStats = try await api.getHeroGlobalStats(region: .preferred)
         } catch {
             // Non-critical
         }
@@ -163,13 +235,36 @@ class PlayerViewModel {
         careerStats?["all-heroes"]
     }
 
-    private func loadHeroesIfNeeded() async {
-        guard heroes.isEmpty else { return }
+    func ensureHeroesLoaded() async {
+        let locale = APILocale.current
+        guard heroes.isEmpty || heroesLocale != locale else { return }
         do {
-            heroes = try await api.getHeroes()
+            heroes = try await api.getHeroes(locale: locale)
+            heroesLocale = locale
         } catch {
             // Non-critical
         }
+    }
+
+    func heroRole(for key: String) -> String {
+        heroInfo(for: key)?.role ?? HeroRoles.role(for: key)
+    }
+
+    // Uses career stats because the summary endpoint only counts offensive assists.
+    func roleAssistDeathRatio(for role: String) -> Double? {
+        if let totals = careerTotals(for: role), totals.isReliable {
+            guard totals.assists > 0 || totals.deaths > 0 else { return nil }
+            return totals.assists / max(totals.deaths, 1)
+        }
+        guard let total = statsSummary?.roles?[role]?.total,
+              let assists = total.assists, let deaths = total.deaths else { return nil }
+        return Double(assists) / Double(max(deaths, 1))
+    }
+
+    private func careerValue(_ categories: [CareerStatCategory], category: String, key: String) -> Double? {
+        categories.first { $0.category == category }?
+            .stats?.first { $0.key == key }?
+            .value?.doubleValue
     }
 
     // MARK: - Computed: General Stats
@@ -198,7 +293,8 @@ class PlayerViewModel {
     }
 
     var totalAssists: Int {
-        statsSummary?.general?.total?.assists ?? 0
+        if let totals = careerTotals(for: nil), totals.isReliable { return Int(totals.assists) }
+        return statsSummary?.general?.total?.assists ?? 0
     }
 
     var totalPlayTimeSeconds: Int {
@@ -212,7 +308,69 @@ class PlayerViewModel {
     // Per 10min stats (from average field)
     var elimsPer10: Double { statsSummary?.general?.average?.eliminations ?? 0 }
     var deathsPer10: Double { statsSummary?.general?.average?.deaths ?? 0 }
-    var assistsPer10: Double { statsSummary?.general?.average?.assists ?? 0 }
+    var assistsPer10: Double { assistsPer10(for: nil) }
+
+    // The summary endpoint only counts offensive assists; career stats carry the full total.
+    func assistsPer10(for role: String?) -> Double {
+        if let totals = careerTotals(for: role), totals.isReliable, totals.seconds > 0 {
+            return totals.assists / totals.seconds * 600
+        }
+        if let role, let entry = statsSummary?.roles?[role] {
+            return entry.average?.assists ?? 0
+        }
+        return statsSummary?.general?.average?.assists ?? 0
+    }
+
+    private func withCareerAssists(_ key: String, _ stats: HeroStatEntry) -> HeroStatEntry {
+        guard let categories = careerStats?[key],
+              let assists = careerValue(categories, category: "assists", key: "assists"),
+              assists >= careerValue(categories, category: "assists", key: "offensive_assists") ?? 0 else { return stats }
+        let seconds = Double(stats.timePlayed ?? 0)
+        let per10 = seconds > 0 ? assists / seconds * 600 : stats.average?.assists
+        return HeroStatEntry(
+            gamesPlayed: stats.gamesPlayed,
+            gamesWon: stats.gamesWon,
+            gamesLost: stats.gamesLost,
+            timePlayed: stats.timePlayed,
+            winrate: stats.winrate,
+            kda: stats.kda,
+            total: stats.total.map {
+                StatTotals(eliminations: $0.eliminations, assists: Int(assists), deaths: $0.deaths, damage: $0.damage, healing: $0.healing)
+            },
+            average: stats.average.map {
+                StatAverages(eliminations: $0.eliminations, assists: per10, deaths: $0.deaths, damage: $0.damage, healing: $0.healing)
+            }
+        )
+    }
+
+    // Blizzard's newer "assists" stat does not cover older play time. When it is smaller than the
+    // legacy offensive-assist count it is incomplete, so callers fall back to the summary numbers.
+    private struct CareerAssistTotals {
+        var assists = 0.0
+        var offensive = 0.0
+        var deaths = 0.0
+        var seconds = 0.0
+        var isReliable: Bool { assists >= offensive }
+    }
+
+    private func careerTotals(for role: String?) -> CareerAssistTotals? {
+        guard let careerStats else { return nil }
+        func add(_ categories: [CareerStatCategory], to totals: inout CareerAssistTotals) {
+            totals.assists += careerValue(categories, category: "assists", key: "assists") ?? 0
+            totals.offensive += careerValue(categories, category: "assists", key: "offensive_assists") ?? 0
+            totals.deaths += careerValue(categories, category: "combat", key: "deaths") ?? 0
+            totals.seconds += careerValue(categories, category: "game", key: "time_played") ?? 0
+        }
+        var totals = CareerAssistTotals()
+        if role == nil, let all = careerStats["all-heroes"] {
+            add(all, to: &totals)
+            return totals
+        }
+        for (hero, categories) in careerStats where hero != "all-heroes" && (role == nil || heroRole(for: hero) == role) {
+            add(categories, to: &totals)
+        }
+        return totals
+    }
     var damagePer10: Double { statsSummary?.general?.average?.damage ?? 0 }
     var healingPer10: Double { statsSummary?.general?.average?.healing ?? 0 }
 
@@ -220,7 +378,7 @@ class PlayerViewModel {
     var topHeroes: [HeroWithStats] {
         guard let heroDict = statsSummary?.heroes else { return [] }
         return heroDict
-            .map { HeroWithStats(key: $0.key, stats: $0.value) }
+            .map { HeroWithStats(key: $0.key, stats: withCareerAssists($0.key, $0.value)) }
             .sorted { $0.stats.timePlayedHours > $1.stats.timePlayedHours }
             .prefix(3)
             .map { $0 }
@@ -229,7 +387,7 @@ class PlayerViewModel {
     var allHeroesSorted: [HeroWithStats] {
         guard let heroDict = statsSummary?.heroes else { return [] }
         return heroDict
-            .map { HeroWithStats(key: $0.key, stats: $0.value) }
+            .map { HeroWithStats(key: $0.key, stats: withCareerAssists($0.key, $0.value)) }
             .sorted { $0.stats.timePlayedHours > $1.stats.timePlayedHours }
     }
 
@@ -296,7 +454,7 @@ class PlayerViewModel {
         }
 
         let elims = avg?.eliminations ?? 0
-        let assists = avg?.assists ?? 0
+        let assists = assistsPer10(for: role)
         let damage = avg?.damage ?? 0
         let healing = avg?.healing ?? 0
 

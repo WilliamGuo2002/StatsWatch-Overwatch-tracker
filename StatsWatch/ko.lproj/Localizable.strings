@@ -207,3 +207,100 @@
 /* PvP Compare placeholders */
 "Player 1 BattleTag (Name#1234)" = "플레이어1 배틀태그 (Name#1234)";
 "Player 2 BattleTag (Name#1234)" = "플레이어2 배틀태그 (Name#1234)";
+
+/* Errors */
+"Invalid server response" = "서버 응답이 올바르지 않습니다";
+"Player not found. Check the BattleTag and try again." = "플레이어를 찾을 수 없습니다. 배틀태그를 확인하고 다시 시도해주세요.";
+"This player's profile is set to private." = "이 플레이어의 프로필은 비공개로 설정되어 있습니다.";
+"Too many requests. Please wait a moment and try again." = "요청이 너무 많습니다. 잠시 후 다시 시도해주세요.";
+"Server error (%lld). Please try again later." = "서버 오류(%lld). 잠시 후 다시 시도해주세요.";
+"Failed to load data. Please try again later." = "데이터를 불러오지 못했습니다. 잠시 후 다시 시도해주세요.";
+"Network error. Please check your connection and try again." = "네트워크 오류입니다. 연결 상태를 확인하고 다시 시도해주세요.";
+"No players found for \"%@\"" = "\"%@\"에 해당하는 플레이어를 찾을 수 없습니다";
+
+/* Hero Meta, Records, Perks, Platform */
+"PC" = "PC";
+"Console" = "콘솔";
+"Americas" = "미주";
+"Europe" = "유럽";
+"Asia" = "아시아";
+"Ban Rate" = "밴률";
+"Ban" = "밴";
+"All Ranks" = "모든 티어";
+"All Maps" = "모든 전장";
+"Emerald" = "에메랄드";
+"Grandmaster" = "그랜드마스터";
+"Hero Records" = "영웅 기록";
+"No hero records available" = "영웅 기록이 없습니다";
+"Time Played" = "플레이 시간";
+"Games Won" = "승리한 게임";
+"Best Accuracy in Game" = "한 게임 최고 명중률";
+"Elims per Life" = "목숨당 처치";
+"Best Kill Streak" = "최고 연속 처치";
+"Best Multikill" = "최고 멀티킬";
+"Elims / 10 min" = "처치 / 10분";
+"Final Blows / 10 min" = "결정타 / 10분";
+"Solo Kills / 10 min" = "단독 처치 / 10분";
+"Objective Kills / 10 min" = "거점 처치 / 10분";
+"Objective Time / 10 min" = "거점 점령 시간 / 10분";
+"Hero Damage / 10 min" = "영웅 피해 / 10분";
+"Healing / 10 min" = "치유량 / 10분";
+"Fewest Deaths / 10 min" = "최소 죽음 / 10분";
+"Perks" = "특성";
+"Minor Perks" = "하급 특성";
+"Major Perks" = "상급 특성";
+"Stadium Powers" = "스타디움 능력";
+"Pick" = "픽";
+"Win" = "승률";
+
+/* Recent Summary, Rank History, Friends */
+"Recent Summary" = "최근 요약";
+"Today" = "오늘";
+"This Week" = "이번 주";
+"Compared with %@" = "%@ 대비";
+"No new games since then" = "이후 새 게임이 없습니다";
+"W-L" = "승-패";
+"Your summary appears once a snapshot from before this period exists. Stats are saved each time you open this profile." = "이 기간 이전의 스냅샷이 있으면 요약이 표시됩니다. 프로필을 열 때마다 데이터가 저장됩니다.";
+"Rank History" = "티어 기록";
+"Rank history builds up as you check this profile on different days." = "여러 날에 걸쳐 이 프로필을 확인하면 티어 기록이 쌓입니다.";
+"Champion" = "챔피언";
+"Hero Specific" = "영웅 전용";
+"Friends Ranking" = "친구 랭킹";
+"Failed to load" = "불러오기 실패";
+
+/* Privacy, Battle.net, Friend Links */
+"This profile is private" = "비공개 프로필입니다";
+"The player has hidden their career profile in Overwatch, so their stats can't be viewed." = "이 플레이어가 오버워치에서 경력 프로필을 비공개로 설정해 데이터를 볼 수 없습니다.";
+"No stats for this game mode yet" = "이 모드의 데이터가 아직 없습니다";
+"Private profile" = "비공개 프로필";
+"Sign in with Battle.net" = "Battle.net으로 로그인";
+"Battle.net sign-in failed. Please try again." = "Battle.net 로그인에 실패했습니다. 다시 시도해주세요.";
+"Added to Favorites" = "즐겨찾기에 추가했습니다";
+"OK" = "확인";
+"My Profile" = "내 프로필";
+"Unlink Battle.net" = "Battle.net 연동 해제";
+"Scan with the iPhone Camera to add this player to Favorites in StatsWatch." = "iPhone 카메라로 스캔하면 StatsWatch에서 이 플레이어를 즐겨찾기에 추가할 수 있습니다.";
+"Share Link" = "링크 공유";
+"Add Me as a Friend" = "친구로 추가하기";
+
+/* In-app Feedback */
+"Send us a message" = "메시지 보내기";
+"Category" = "카테고리";
+"General" = "일반";
+"Bug" = "버그";
+"Feature" = "기능 제안";
+"Tell us what you think about StatsWatch…" = "StatsWatch에 대한 의견을 들려주세요…";
+"What happened, and what did you expect? Steps to reproduce help a lot." = "무슨 일이 있었고 어떤 결과를 기대했나요? 재현 방법을 알려주시면 큰 도움이 됩니다.";
+"Describe your idea and how it would help players." = "아이디어와 그것이 플레이어에게 어떻게 도움이 될지 알려주세요.";
+"Your email (optional)" = "이메일 (선택)";
+"Only used if you'd like a reply." = "답장을 원하는 경우에만 사용됩니다.";
+"Include device info" = "기기 정보 포함";
+"Send Feedback" = "피드백 보내기";
+"Send" = "보내기";
+"Thanks for your feedback!" = "피드백 감사합니다!";
+"Couldn't send feedback" = "피드백을 보내지 못했습니다";
+"Feedback is temporarily unavailable. Please try again later." = "피드백 기능을 일시적으로 사용할 수 없습니다. 잠시 후 다시 시도해주세요.";
+"Please check your connection and try again. Your message has been kept." = "연결 상태를 확인하고 다시 시도해주세요. 작성한 내용은 유지됩니다.";
+"About & Support" = "정보 및 지원";
+"Tip via PayPal" = "PayPal로 후원하기";
+"Player data is retrieved from publicly available profiles via the OverFast API. This app does not collect, store, or share any personal information beyond what is saved locally on your device, except feedback you choose to send." = "플레이어 데이터는 OverFast API를 통해 공개 프로필에서 가져옵니다. 직접 보낸 피드백을 제외하고, 이 앱은 개인정보를 수집·저장·공유하지 않으며 데이터는 기기에만 저장됩니다.";

@@ -207,3 +207,100 @@
 /* PvP Compare placeholders */
 "Player 1 BattleTag (Name#1234)" = "プレイヤー1 バトルタグ (Name#1234)";
 "Player 2 BattleTag (Name#1234)" = "プレイヤー2 バトルタグ (Name#1234)";
+
+/* Errors */
+"Invalid server response" = "サーバーの応答が無効です";
+"Player not found. Check the BattleTag and try again." = "プレイヤーが見つかりません。バトルタグを確認して再度お試しください。";
+"This player's profile is set to private." = "このプレイヤーのプロフィールは非公開に設定されています。";
+"Too many requests. Please wait a moment and try again." = "リクエストが多すぎます。しばらくしてから再度お試しください。";
+"Server error (%lld). Please try again later." = "サーバーエラー（%lld）。しばらくしてから再度お試しください。";
+"Failed to load data. Please try again later." = "データの読み込みに失敗しました。しばらくしてから再度お試しください。";
+"Network error. Please check your connection and try again." = "ネットワークエラー。接続を確認して再度お試しください。";
+"No players found for \"%@\"" = "「%@」に一致するプレイヤーが見つかりません";
+
+/* Hero Meta, Records, Perks, Platform */
+"PC" = "PC";
+"Console" = "コンソール";
+"Americas" = "アメリカ";
+"Europe" = "ヨーロッパ";
+"Asia" = "アジア";
+"Ban Rate" = "BAN率";
+"Ban" = "BAN";
+"All Ranks" = "全ランク";
+"All Maps" = "全マップ";
+"Emerald" = "エメラルド";
+"Grandmaster" = "グランドマスター";
+"Hero Records" = "ヒーロー記録";
+"No hero records available" = "ヒーロー記録がありません";
+"Time Played" = "プレイ時間";
+"Games Won" = "勝利数";
+"Best Accuracy in Game" = "1試合の最高命中率";
+"Elims per Life" = "1ライフあたりのキル";
+"Best Kill Streak" = "最高連続キル";
+"Best Multikill" = "最高マルチキル";
+"Elims / 10 min" = "キル / 10分";
+"Final Blows / 10 min" = "最後の一撃 / 10分";
+"Solo Kills / 10 min" = "ソロキル / 10分";
+"Objective Kills / 10 min" = "目標地点でのキル / 10分";
+"Objective Time / 10 min" = "目標確保時間 / 10分";
+"Hero Damage / 10 min" = "ヒーローダメージ / 10分";
+"Healing / 10 min" = "回復量 / 10分";
+"Fewest Deaths / 10 min" = "最少デス / 10分";
+"Perks" = "パーク";
+"Minor Perks" = "マイナー・パーク";
+"Major Perks" = "メジャー・パーク";
+"Stadium Powers" = "スタジアム・パワー";
+"Pick" = "ピック";
+"Win" = "勝率";
+
+/* Recent Summary, Rank History, Friends */
+"Recent Summary" = "最近のまとめ";
+"Today" = "今日";
+"This Week" = "今週";
+"Compared with %@" = "%@ との比較";
+"No new games since then" = "それ以降の新しい試合はありません";
+"W-L" = "勝-敗";
+"Your summary appears once a snapshot from before this period exists. Stats are saved each time you open this profile." = "この期間より前のスナップショットがあると、まとめが表示されます。プロフィールを開くたびにデータが保存されます。";
+"Rank History" = "ランク履歴";
+"Rank history builds up as you check this profile on different days." = "別の日にこのプロフィールを確認するたびに、ランク履歴が蓄積されます。";
+"Champion" = "チャンピオン";
+"Hero Specific" = "ヒーロー固有";
+"Friends Ranking" = "フレンドランキング";
+"Failed to load" = "読み込み失敗";
+
+/* Privacy, Battle.net, Friend Links */
+"This profile is private" = "このプロフィールは非公開です";
+"The player has hidden their career profile in Overwatch, so their stats can't be viewed." = "このプレイヤーはオーバーウォッチでキャリアプロフィールを非公開にしているため、データを表示できません。";
+"No stats for this game mode yet" = "このモードのデータはまだありません";
+"Private profile" = "非公開のため表示不可";
+"Sign in with Battle.net" = "Battle.netでサインイン";
+"Battle.net sign-in failed. Please try again." = "Battle.netへのサインインに失敗しました。もう一度お試しください。";
+"Added to Favorites" = "お気に入りに追加しました";
+"OK" = "OK";
+"My Profile" = "マイプロフィール";
+"Unlink Battle.net" = "Battle.netの連携を解除";
+"Scan with the iPhone Camera to add this player to Favorites in StatsWatch." = "iPhoneのカメラでスキャンすると、StatsWatchでこのプレイヤーをお気に入りに追加できます。";
+"Share Link" = "リンクを共有";
+"Add Me as a Friend" = "フレンドに追加";
+
+/* In-app Feedback */
+"Send us a message" = "メッセージを送る";
+"Category" = "カテゴリ";
+"General" = "一般";
+"Bug" = "不具合";
+"Feature" = "機能要望";
+"Tell us what you think about StatsWatch…" = "StatsWatchへのご意見をお聞かせください…";
+"What happened, and what did you expect? Steps to reproduce help a lot." = "何が起きて、どうなるはずでしたか？再現手順があると助かります。";
+"Describe your idea and how it would help players." = "アイデアと、それがプレイヤーにどう役立つかを教えてください。";
+"Your email (optional)" = "メールアドレス（任意）";
+"Only used if you'd like a reply." = "返信を希望する場合のみ使用します。";
+"Include device info" = "デバイス情報を含める";
+"Send Feedback" = "フィードバックを送信";
+"Send" = "送信";
+"Thanks for your feedback!" = "フィードバックありがとうございます！";
+"Couldn't send feedback" = "フィードバックを送信できませんでした";
+"Feedback is temporarily unavailable. Please try again later." = "フィードバックは一時的に利用できません。しばらくしてから再度お試しください。";
+"Please check your connection and try again. Your message has been kept." = "接続を確認して再度お試しください。入力内容は保持されています。";
+"About & Support" = "アプリについて・サポート";
+"Tip via PayPal" = "PayPalでチップを送る";
+"Player data is retrieved from publicly available profiles via the OverFast API. This app does not collect, store, or share any personal information beyond what is saved locally on your device, except feedback you choose to send." = "プレイヤーデータはOverFast APIを通じて公開プロフィールから取得しています。ご自身で送信したフィードバックを除き、本アプリは個人情報を収集・保存・共有せず、データは端末内にのみ保存されます。";

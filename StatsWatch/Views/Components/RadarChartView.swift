@@ -73,10 +73,16 @@ struct RadarChartSection: View {
     }
 
     private var currentAverage: StatAverages? {
-        if let role = viewModel.selectedRadarRole {
-            return viewModel.statsSummary?.roles?[role]?.average
-        }
-        return viewModel.statsSummary?.general?.average
+        let role = viewModel.selectedRadarRole
+        let base = role.flatMap { viewModel.statsSummary?.roles?[$0]?.average } ?? (role == nil ? viewModel.statsSummary?.general?.average : nil)
+        guard let base else { return nil }
+        return StatAverages(
+            eliminations: base.eliminations,
+            assists: viewModel.assistsPer10(for: role),
+            deaths: base.deaths,
+            damage: base.damage,
+            healing: base.healing
+        )
     }
 }
 

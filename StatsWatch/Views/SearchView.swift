@@ -1,3 +1,4 @@
+import AuthenticationServices
 import SwiftUI
 
 struct SearchView: View {
@@ -7,6 +8,11 @@ struct SearchView: View {
     @State private var history: [SearchHistoryItem] = []
     @State private var showLanguagePicker = false
     @AppStorage("app_language") private var appLanguage: String = ""
+    @AppStorage(BattleNetAuth.storageKey) private var myBattleTag: String = ""
+    @Environment(\.webAuthenticationSession) private var webAuthenticationSession
+    @State private var isSigningIn = false
+    @State private var signInFailed = false
+    @State private var addedFriendId: String?
 
     private let storage = LocalStorageService.shared
 
@@ -174,6 +180,39 @@ struct SearchView: View {
                             .padding(.horizontal)
                             .padding(.top, 16)
 
+                            // My account
+                            if !myBattleTag.isEmpty {
+                                MyAccountCard(
+                                    battleTag: myBattleTag,
+                                    onOpen: { navigationPath.append(myBattleTag.replacingOccurrences(of: "#", with: "-")) },
+                                    onUnlink: { myBattleTag = "" }
+                                )
+                                .padding(.horizontal)
+                                .padding(.top, 16)
+                            } else if BattleNetAuth.isConfigured {
+                                Button {
+                                    Task { await signIn() }
+                                } label: {
+                                    HStack(spacing: 8) {
+                                        if isSigningIn {
+                                            ProgressView().tint(.white)
+                                        } else {
+                                            Image(systemName: "person.badge.key.fill")
+                                        }
+                                        Text("Sign in with Battle.net")
+                                            .font(.system(size: 15, weight: .semibold))
+                                    }
+                                    .foregroundStyle(.white)
+                                    .frame(maxWidth: .infinity)
+                                    .padding(.vertical, 12)
+                                    .background(Color(red: 0.0, green: 0.45, blue: 0.85))
+                                    .clipShape(RoundedRectangle(cornerRadius: 12))
+                                }
+                                .disabled(isSigningIn)
+                                .padding(.horizontal)
+                                .padding(.top, 16)
+                            }
+
                             // Favorites
                             if !favorites.isEmpty {
                                 VStack(alignment: .leading, spacing: 8) {
@@ -183,6 +222,16 @@ struct SearchView: View {
                                         Text("Favorites")
                                             .font(.system(size: 16, weight: .bold))
                                         Spacer()
+                                        NavigationLink {
+                                            FriendsRankingView(viewModel: viewModel, favorites: favorites)
+                                        } label: {
+                                            HStack(spacing: 4) {
+                                                Image(systemName: "list.number")
+                                                Text("Friends Ranking")
+                                            }
+                                            .font(.system(size: 12, weight: .semibold))
+                                            .foregroundStyle(.orange)
+                                        }
                                     }
 
                                     ForEach(favorites) { fav in
@@ -279,11 +328,58 @@ struct SearchView: View {
             .sheet(isPresented: $showLanguagePicker) {
                 LanguagePickerSheet(selectedLanguage: $appLanguage)
             }
+            .alert("Battle.net sign-in failed. Please try again.", isPresented: $signInFailed) {
+                Button("OK", role: .cancel) {}
+            }
+            .alert(
+                "Added to Favorites",
+                isPresented: Binding(get: { addedFriendId != nil }, set: { if !$0 { addedFriendId = nil } }),
+                presenting: addedFriendId
+            ) { playerId in
+                Button("OK", role: .cancel) { openProfile(playerId) }
+            } message: { playerId in
+                Text(verbatim: formatBattleTag(from: playerId))
+            }
+            .onOpenURL { url in
+                Task { await handleFriendLink(url) }
+            }
             .onAppear {
                 favorites = storage.getFavorites()
                 history = storage.getHistory()
             }
         }
+    }
+
+    private func signIn() async {
+        isSigningIn = true
+        defer { isSigningIn = false }
+        do {
+            myBattleTag = try await BattleNetAuth.signIn(using: webAuthenticationSession)
+        } catch {
+            if !BattleNetAuth.isCancellation(error) { signInFailed = true }
+        }
+    }
+
+    private func handleFriendLink(_ url: URL) async {
+        guard let playerId = FriendLink.playerId(from: url) else { return }
+        if !storage.isFavorite(playerId: playerId),
+           let summary = try? await OverwatchAPIService.shared.getPlayerSummary(playerId: playerId) {
+            storage.addFavorite(FavoritePlayer(
+                playerId: playerId,
+                name: formatBattleTag(from: playerId),
+                avatar: summary.avatar,
+                addedAt: Date()
+            ))
+            favorites = storage.getFavorites()
+            addedFriendId = playerId
+        } else {
+            openProfile(playerId)
+        }
+    }
+
+    private func openProfile(_ playerId: String) {
+        navigationPath = NavigationPath()
+        navigationPath.append(playerId)
     }
 
     private func autoNavigateIfDirectLookup() {
@@ -472,5 +568,47 @@ struct LanguagePickerSheet: View {
                 }
             }
         }
+    }
+}
+
+struct MyAccountCard: View {
+    let battleTag: String
+    let onOpen: () -> Void
+    let onUnlink: () -> Void
+
+    var body: some View {
+        HStack(spacing: 12) {
+            Button(action: onOpen) {
+                HStack(spacing: 12) {
+                    Image(systemName: "person.crop.circle.fill")
+                        .font(.system(size: 30))
+                        .foregroundStyle(.blue)
+                    VStack(alignment: .leading, spacing: 2) {
+                        Text("My Profile")
+                            .font(.system(size: 11))
+                            .foregroundStyle(.secondary)
+                        Text(verbatim: battleTag)
+                            .font(.system(size: 15, weight: .semibold))
+                            .foregroundStyle(.primary)
+                    }
+                    Spacer()
+                    Image(systemName: "chevron.right")
+                        .font(.system(size: 12))
+                        .foregroundStyle(.secondary)
+                }
+            }
+            .buttonStyle(.plain)
+
+            Menu {
+                Button("Unlink Battle.net", role: .destructive, action: onUnlink)
+            } label: {
+                Image(systemName: "ellipsis.circle")
+                    .font(.system(size: 18))
+                    .foregroundStyle(.secondary)
+            }
+        }
+        .padding(12)
+        .background(.regularMaterial)
+        .clipShape(RoundedRectangle(cornerRadius: 12))
     }
 }

@@ -207,3 +207,100 @@
 /* PvP Compare placeholders */
 "Player 1 BattleTag (Name#1234)" = "玩家1 战网ID (Name#1234)";
 "Player 2 BattleTag (Name#1234)" = "玩家2 战网ID (Name#1234)";
+
+/* Errors */
+"Invalid server response" = "服务器响应无效";
+"Player not found. Check the BattleTag and try again." = "未找到该玩家，请检查战网ID后重试。";
+"This player's profile is set to private." = "该玩家的资料设置为私密。";
+"Too many requests. Please wait a moment and try again." = "请求过于频繁，请稍后再试。";
+"Server error (%lld). Please try again later." = "服务器错误（%lld），请稍后再试。";
+"Failed to load data. Please try again later." = "数据加载失败，请稍后再试。";
+"Network error. Please check your connection and try again." = "网络错误，请检查网络连接后重试。";
+"No players found for \"%@\"" = "未找到与“%@”相关的玩家";
+
+/* Hero Meta, Records, Perks, Platform */
+"PC" = "PC";
+"Console" = "主机";
+"Americas" = "美洲";
+"Europe" = "欧洲";
+"Asia" = "亚洲";
+"Ban Rate" = "禁用率";
+"Ban" = "禁用";
+"All Ranks" = "全部段位";
+"All Maps" = "全部地图";
+"Emerald" = "翡翠";
+"Grandmaster" = "宗师";
+"Hero Records" = "英雄纪录";
+"No hero records available" = "暂无英雄纪录";
+"Time Played" = "游戏时间";
+"Games Won" = "胜场";
+"Best Accuracy in Game" = "单场最高命中率";
+"Elims per Life" = "每条命击杀";
+"Best Kill Streak" = "最高连杀";
+"Best Multikill" = "最高多杀";
+"Elims / 10 min" = "击杀 / 10分钟";
+"Final Blows / 10 min" = "最后一击 / 10分钟";
+"Solo Kills / 10 min" = "单杀 / 10分钟";
+"Objective Kills / 10 min" = "目标点击杀 / 10分钟";
+"Objective Time / 10 min" = "目标点时间 / 10分钟";
+"Hero Damage / 10 min" = "英雄伤害 / 10分钟";
+"Healing / 10 min" = "治疗量 / 10分钟";
+"Fewest Deaths / 10 min" = "最少死亡 / 10分钟";
+"Perks" = "天赋";
+"Minor Perks" = "次要天赋";
+"Major Perks" = "主要天赋";
+"Stadium Powers" = "角斗领域能力";
+"Pick" = "选取";
+"Win" = "胜率";
+
+/* Recent Summary, Rank History, Friends */
+"Recent Summary" = "近期总结";
+"Today" = "今日";
+"This Week" = "本周";
+"Compared with %@" = "对比 %@";
+"No new games since then" = "此后没有新的对局";
+"W-L" = "胜-负";
+"Your summary appears once a snapshot from before this period exists. Stats are saved each time you open this profile." = "需要有本时段之前的快照才能生成总结。每次打开此资料页都会保存一次数据。";
+"Rank History" = "段位历史";
+"Rank history builds up as you check this profile on different days." = "在不同日期查看此资料页，段位历史就会逐渐积累。";
+"Champion" = "冠军";
+"Hero Specific" = "英雄专属数据";
+"Friends Ranking" = "好友段位榜";
+"Failed to load" = "加载失败";
+
+/* Privacy, Battle.net, Friend Links */
+"This profile is private" = "该玩家资料为私密";
+"The player has hidden their career profile in Overwatch, so their stats can't be viewed." = "该玩家在守望先锋中隐藏了生涯资料，无法查看数据。";
+"No stats for this game mode yet" = "该模式暂无数据";
+"Private profile" = "私密资料，无法查看";
+"Sign in with Battle.net" = "使用战网登录";
+"Battle.net sign-in failed. Please try again." = "战网登录失败，请重试。";
+"Added to Favorites" = "已添加到收藏";
+"OK" = "好";
+"My Profile" = "我的资料";
+"Unlink Battle.net" = "解除战网绑定";
+"Scan with the iPhone Camera to add this player to Favorites in StatsWatch." = "用 iPhone 相机扫码，即可在 StatsWatch 中收藏该玩家。";
+"Share Link" = "分享链接";
+"Add Me as a Friend" = "加我为好友";
+
+/* In-app Feedback */
+"Send us a message" = "给我们留言";
+"Category" = "类别";
+"General" = "一般反馈";
+"Bug" = "问题";
+"Feature" = "功能建议";
+"Tell us what you think about StatsWatch…" = "说说你对 StatsWatch 的看法…";
+"What happened, and what did you expect? Steps to reproduce help a lot." = "发生了什么？你期望的结果是什么？附上复现步骤会很有帮助。";
+"Describe your idea and how it would help players." = "描述你的想法，以及它能如何帮助玩家。";
+"Your email (optional)" = "你的邮箱（选填）";
+"Only used if you'd like a reply." = "仅在你希望收到回复时使用。";
+"Include device info" = "附带设备信息";
+"Send Feedback" = "发送反馈";
+"Send" = "发送";
+"Thanks for your feedback!" = "感谢你的反馈！";
+"Couldn't send feedback" = "反馈发送失败";
+"Feedback is temporarily unavailable. Please try again later." = "反馈功能暂时不可用，请稍后再试。";
+"Please check your connection and try again. Your message has been kept." = "请检查网络后重试，你填写的内容已保留。";
+"About & Support" = "关于与支持";
+"Tip via PayPal" = "通过 PayPal 打赏";
+"Player data is retrieved from publicly available profiles via the OverFast API. This app does not collect, store, or share any personal information beyond what is saved locally on your device, except feedback you choose to send." = "玩家数据来自 OverFast API 提供的公开资料。除你主动发送的反馈外，本应用不会收集、存储或分享任何个人信息，所有数据仅保存在你的设备上。";

@@ -16,7 +16,7 @@ struct StatsOverviewSection: View {
                 StatCard(
                     title: "KDA",
                     value: String(format: "%.2f", viewModel.overallKDA),
-                    subtitle: "\(viewModel.totalEliminations)/\(viewModel.totalDeaths)/\(viewModel.totalAssists)"
+                    subtitle: "\(viewModel.totalEliminations)/\(viewModel.totalDeaths)/\(viewModel.statsSummary?.general?.total?.assists ?? 0)"
                 )
 
                 StatCard(

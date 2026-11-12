@@ -52,6 +52,11 @@ struct HeroDetailView: View {
                     HeroVsOverallComparison(hero: hero, general: general)
                 }
 
+                // Hero-specific and personal best stats from career data
+                if let categories = viewModel.careerStatsForHero(hero.key) {
+                    HeroCareerHighlights(categories: categories, accentColor: roleColor)
+                }
+
                 // Career stats link
                 NavigationLink {
                     CareerStatsView(viewModel: viewModel, heroKey: hero.key, heroName: heroName)
@@ -430,5 +435,79 @@ struct ComparisonRow: View {
         .padding(.horizontal, 12)
         .background(.regularMaterial)
         .clipShape(RoundedRectangle(cornerRadius: 6))
+    }
+}
+
+struct HeroCareerHighlights: View {
+    let categories: [CareerStatCategory]
+    let accentColor: Color
+
+    private func stats(_ category: String) -> [CareerStat] {
+        (categories.first { $0.category == category }?.stats ?? [])
+            .filter { ($0.value?.doubleValue ?? 0) > 0 }
+    }
+
+    var body: some View {
+        VStack(spacing: 14) {
+            let specific = stats("hero_specific")
+            if !specific.isEmpty {
+                HighlightGrid(title: "Hero Specific", icon: "sparkles", color: accentColor, stats: specific)
+            }
+            let best = stats("best")
+            if !best.isEmpty {
+                HighlightGrid(title: "Personal Bests", icon: "medal.fill", color: .orange, stats: best)
+            }
+        }
+    }
+}
+
+struct HighlightGrid: View {
+    let title: LocalizedStringKey
+    let icon: String
+    let color: Color
+    let stats: [CareerStat]
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 8) {
+            HStack {
+                Image(systemName: icon)
+                    .foregroundStyle(color)
+                Text(title)
+                    .font(.system(size: 16, weight: .bold))
+            }
+            .padding(.horizontal)
+
+            LazyVGrid(columns: [GridItem(.flexible(), spacing: 8), GridItem(.flexible(), spacing: 8)], spacing: 8) {
+                ForEach(stats) { stat in
+                    VStack(alignment: .leading, spacing: 4) {
+                        Text(formattedValue(stat))
+                            .font(.system(size: 16, weight: .bold, design: .rounded))
+                            .foregroundStyle(color)
+                        Text(stat.label ?? stat.key ?? "")
+                            .font(.system(size: 10))
+                            .foregroundStyle(.secondary)
+                            .lineLimit(2)
+                            .fixedSize(horizontal: false, vertical: true)
+                    }
+                    .frame(maxWidth: .infinity, alignment: .leading)
+                    .padding(10)
+                    .background(.regularMaterial)
+                    .clipShape(RoundedRectangle(cornerRadius: 10))
+                }
+            }
+            .padding(.horizontal)
+        }
+    }
+
+    private func formattedValue(_ stat: CareerStat) -> String {
+        let key = stat.key ?? ""
+        let value = stat.value?.doubleValue ?? 0
+        if key.contains("time") {
+            return formatTimePlayed(seconds: Int(value))
+        }
+        if key.contains("accuracy") || key.contains("percentage") {
+            return String(format: "%.0f%%", value)
+        }
+        return stat.value?.displayString ?? "-"
     }
 }

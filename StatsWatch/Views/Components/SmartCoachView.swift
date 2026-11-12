@@ -442,9 +442,10 @@ struct HeroPoolAnalysisCard: View {
 
         // Diversity score
         let heroCount = meaningful.count
-        let roleBalance = min(Double(tanks.count), 3) / 3 * 0.33
-            + min(Double(dps.count), 5) / 5 * 0.33
-            + min(Double(supports.count), 4) / 4 * 0.34
+        let tankBalance: Double = min(Double(tanks.count), 3) / 3 * 0.33
+        let dpsBalance: Double = min(Double(dps.count), 5) / 5 * 0.33
+        let supportBalance: Double = min(Double(supports.count), 4) / 4 * 0.34
+        let roleBalance = tankBalance + dpsBalance + supportBalance
         let diversity = (min(Double(heroCount), 12) / 12 * 0.5 + roleBalance * 0.5) * 100
 
         // One-trick check
@@ -632,7 +633,7 @@ struct CoachTipsCard: View {
             elims = roleEntry.average?.eliminations ?? 0
             damage = roleEntry.average?.damage ?? 0
             healing = roleEntry.average?.healing ?? 0
-            assists = roleEntry.average?.assists ?? 0
+            assists = viewModel.assistsPer10(for: role)
             roleName = role.capitalized
         } else if let general = viewModel.statsSummary?.general {
             // Use general stats
@@ -642,7 +643,7 @@ struct CoachTipsCard: View {
             elims = general.average?.eliminations ?? 0
             damage = general.average?.damage ?? 0
             healing = general.average?.healing ?? 0
-            assists = general.average?.assists ?? 0
+            assists = viewModel.assistsPer10
             roleName = "Overall"
         } else {
             return []

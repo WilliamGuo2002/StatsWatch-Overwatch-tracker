@@ -1,9 +1,11 @@
 import SwiftUI
+import WidgetKit
 
 struct PlayerProfileView: View {
     @Bindable var viewModel: PlayerViewModel
     let playerId: String
     @State private var isFavorite = false
+    @State private var showFriendLink = false
     private let storage = LocalStorageService.shared
 
     var body: some View {
@@ -48,16 +50,32 @@ struct PlayerProfileView: View {
                         PlayerHeaderSection(viewModel: viewModel, playerId: playerId)
 
                         // Competitive Ranks Detail
-                        if let ranks = viewModel.playerSummary?.competitive?.pc {
+                        if let ranks = viewModel.displayedRanks {
                             CompetitiveRanksSection(ranks: ranks)
+                        }
+
+                        // Platform Tabs
+                        if !viewModel.availablePlatforms.isEmpty {
+                            PlatformTabsView(viewModel: viewModel)
                         }
 
                         // Game Mode Tabs
                         GameModeTabsView(viewModel: viewModel)
 
+                        if viewModel.isPrivateProfile {
+                            PrivateProfileNotice()
+                        } else if let stats = viewModel.statsSummary, stats.general == nil {
+                            Text("No stats for this game mode yet")
+                                .font(.system(size: 13))
+                                .foregroundStyle(.secondary)
+                                .padding(.vertical, 20)
+                        }
+
                         // Stats Overview
-                        if viewModel.statsSummary != nil {
+                        if viewModel.statsSummary?.general != nil {
                             StatsOverviewSection(viewModel: viewModel)
+
+                            RecentSummarySection(viewModel: viewModel, playerId: playerId)
 
                             // Role Stats
                             if !viewModel.roleStats.isEmpty {
@@ -88,6 +106,9 @@ struct PlayerProfileView: View {
                                 ProfileNavLink(icon: "arrow.triangle.swap", title: "Hero Comparison", color: .blue) {
                                     HeroComparisonView(viewModel: viewModel)
                                 }
+                                ProfileNavLink(icon: "trophy.fill", title: "Hero Records", color: .yellow) {
+                                    HeroRecordsView(viewModel: viewModel, playerId: playerId)
+                                }
                                 ProfileNavLink(icon: "list.bullet.rectangle", title: "Full Career Stats", color: .purple) {
                                     CareerStatsView(viewModel: viewModel, heroKey: nil, heroName: "Overall")
                                 }
@@ -112,9 +133,19 @@ struct PlayerProfileView: View {
             }
         }
         .navigationBarTitleDisplayMode(.inline)
+        .sheet(isPresented: $showFriendLink) {
+            FriendLinkSheet(playerId: playerId, avatar: viewModel.playerSummary?.avatar)
+        }
         .toolbar {
             ToolbarItem(placement: .topBarTrailing) {
                 HStack(spacing: 12) {
+                    Button {
+                        showFriendLink = true
+                    } label: {
+                        Image(systemName: "qrcode")
+                            .foregroundStyle(.secondary)
+                    }
+
                     NavigationLink {
                         ShareCardView(viewModel: viewModel, playerId: playerId)
                     } label: {
@@ -155,9 +186,8 @@ struct PlayerProfileView: View {
             }
             // Write widget data
             if let summary = viewModel.playerSummary, let stats = viewModel.statsSummary {
-                let rank = viewModel.playerSummary?.competitive?.pc?.damage?.division
-                    ?? viewModel.playerSummary?.competitive?.pc?.support?.division
-                    ?? viewModel.playerSummary?.competitive?.pc?.tank?.division
+                let ranks = viewModel.displayedRanks
+                let rank = ranks?.damage?.division ?? ranks?.support?.division ?? ranks?.tank?.division
                 let widgetData = WidgetPlayerData(
                     name: formatBattleTag(from: playerId),
                     winrate: stats.general?.winrate ?? 0,
@@ -168,23 +198,8 @@ struct PlayerProfileView: View {
                 )
                 if let data = try? JSONEncoder().encode(widgetData) {
                     UserDefaults(suiteName: "group.WilliamGuo.StatsWatch")?.set(data, forKey: "widget_player_data")
+                    WidgetCenter.shared.reloadAllTimelines()
                 }
-            }
-            if let stats = viewModel.statsSummary {
-                storage.addSnapshot(StatSnapshot(
-                    id: UUID(),
-                    playerId: playerId,
-                    date: Date(),
-                    gamemode: viewModel.selectedMode.rawValue,
-                    winrate: stats.general?.winrate ?? 0,
-                    kda: stats.general?.kda ?? 0,
-                    gamesPlayed: stats.general?.gamesPlayed ?? 0,
-                    elimsPer10: stats.general?.average?.eliminations ?? 0,
-                    deathsPer10: stats.general?.average?.deaths ?? 0,
-                    damagePer10: stats.general?.average?.damage ?? 0,
-                    healingPer10: stats.general?.average?.healing ?? 0,
-                    assistsPer10: stats.general?.average?.assists ?? 0
-                ))
             }
         }
     }
@@ -232,7 +247,7 @@ struct PlayerHeaderSection: View {
             Spacer()
 
             // Competitive ranks
-            if let ranks = viewModel.playerSummary?.competitive?.pc {
+            if let ranks = viewModel.displayedRanks {
                 CompactRanksView(ranks: ranks)
             }
         }
@@ -480,6 +495,59 @@ struct GameModeTabsView: View {
         .padding(3)
         .background(.regularMaterial)
         .clipShape(RoundedRectangle(cornerRadius: 10))
+        .padding(.horizontal)
+    }
+}
+
+struct PlatformTabsView: View {
+    @Bindable var viewModel: PlayerViewModel
+
+    var body: some View {
+        HStack(spacing: 0) {
+            ForEach(viewModel.availablePlatforms, id: \.self) { platform in
+                let isSelected = viewModel.selectedPlatform == platform
+                Button {
+                    Task { await viewModel.switchPlatform(platform) }
+                } label: {
+                    HStack(spacing: 6) {
+                        Image(systemName: platform == .pc ? "desktopcomputer" : "gamecontroller.fill")
+                            .font(.system(size: 12))
+                        Text(platform.displayName)
+                            .font(.system(size: 13, weight: isSelected ? .bold : .medium))
+                    }
+                    .foregroundStyle(isSelected ? .white : .primary)
+                    .frame(maxWidth: .infinity)
+                    .padding(.vertical, 8)
+                    .background(isSelected ? Color.indigo : Color.clear)
+                    .clipShape(RoundedRectangle(cornerRadius: 8))
+                }
+            }
+        }
+        .padding(3)
+        .background(.regularMaterial)
+        .clipShape(RoundedRectangle(cornerRadius: 10))
+        .padding(.horizontal)
+    }
+}
+
+struct PrivateProfileNotice: View {
+    var body: some View {
+        VStack(spacing: 10) {
+            Image(systemName: "lock.fill")
+                .font(.system(size: 30))
+                .foregroundStyle(.secondary)
+            Text("This profile is private")
+                .font(.system(size: 16, weight: .semibold))
+            Text("The player has hidden their career profile in Overwatch, so their stats can't be viewed.")
+                .font(.system(size: 12))
+                .foregroundStyle(.secondary)
+                .multilineTextAlignment(.center)
+        }
+        .frame(maxWidth: .infinity)
+        .padding(.vertical, 24)
+        .padding(.horizontal, 20)
+        .background(.regularMaterial)
+        .clipShape(RoundedRectangle(cornerRadius: 12))
         .padding(.horizontal)
     }
 }

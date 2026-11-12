@@ -1,0 +1,27 @@
+name = "statswatch-worker"
+main = "src/index.js"
+compatibility_date = "2025-06-01"
+
+[vars]
+# Battle.net sign-in: your client ID (public) and this worker's callback URL.
+# The same callback URL must be registered as a Redirect URL on develop.battle.net.
+BNET_CLIENT_ID = ""
+REDIRECT_URI = "https://statswatch-worker.<your-subdomain>.workers.dev/callback"
+
+# Optional sender for feedback mail. Leave unset to use Resend's test sender,
+# which can only deliver to the email address of your own Resend account.
+# FEEDBACK_FROM = "StatsWatch Feedback <feedback@your-domain.com>"
+
+# Secrets are set separately and never committed:
+#   npx wrangler secret put BNET_CLIENT_SECRET
+#   npx wrangler secret put RESEND_API_KEY
+#   npx wrangler secret put FEEDBACK_TO        (the address that receives feedback)
+
+# Limits feedback to 5 submissions per minute per IP.
+[[ratelimits]]
+name = "FEEDBACK_LIMITER"
+namespace_id = "1001"
+
+  [ratelimits.simple]
+  limit = 5
+  period = 60

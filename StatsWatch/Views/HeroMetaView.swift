@@ -3,30 +3,57 @@ import SwiftUI
 struct HeroMetaView: View {
     let viewModel: PlayerViewModel
     @State private var heroStats: [HeroGlobalStat] = []
+    @State private var maps: [MapInfo] = []
     @State private var isLoading = false
-    @State private var errorMessage: String?
+    @State private var errorMessage: LocalizedStringKey?
     @State private var selectedRole: String? = nil
     @State private var sortBy: MetaSortOption = .pickrate
-    @State private var selectedGamemode: String = "competitive"
+    @State private var selectedGamemode: GameMode = .competitive
+    @State private var region: MetaRegion = .preferred
+    @State private var division: CompetitiveDivision? = nil
+    @State private var mapKey: String? = nil
 
-    enum MetaSortOption: String, CaseIterable {
-        case pickrate = "Pick Rate"
-        case winrate = "Win Rate"
+    enum MetaSortOption: CaseIterable {
+        case pickrate, winrate, banrate
+
+        var title: LocalizedStringKey {
+            switch self {
+            case .pickrate: return "Pick Rate"
+            case .winrate: return "Win Rate"
+            case .banrate: return "Ban Rate"
+            }
+        }
     }
 
     private let api = OverwatchAPIService.shared
+    private static let standardMapModes: Set<String> = ["assault", "clash", "control", "escort", "flashpoint", "hybrid", "push"]
+
+    private var hasBanrates: Bool {
+        heroStats.contains { ($0.banrate ?? 0) > 0 }
+    }
+
+    private var sortOptions: [MetaSortOption] {
+        hasBanrates ? MetaSortOption.allCases : [.pickrate, .winrate]
+    }
+
+    private var filterKey: String {
+        "\(selectedGamemode.rawValue)-\(region.rawValue)-\(division?.rawValue ?? "")-\(mapKey ?? "")"
+    }
+
+    private var selectedMapName: String? {
+        mapKey.flatMap { key in maps.first { $0.key == key }?.name }
+    }
 
     var body: some View {
         ScrollView {
             VStack(spacing: 16) {
                 // Gamemode toggle
                 HStack(spacing: 0) {
-                    ForEach(["competitive", "quickplay"], id: \.self) { mode in
+                    ForEach(GameMode.allCases, id: \.self) { mode in
                         Button {
                             selectedGamemode = mode
-                            Task { await loadStats() }
                         } label: {
-                            Text(mode == "competitive" ? "Competitive" : "Quick Play")
+                            Text(mode.displayName)
                                 .font(.system(size: 13, weight: selectedGamemode == mode ? .bold : .medium))
                                 .foregroundStyle(selectedGamemode == mode ? .white : .primary)
                                 .frame(maxWidth: .infinity)
@@ -40,6 +67,44 @@ struct HeroMetaView: View {
                 .background(.regularMaterial)
                 .clipShape(RoundedRectangle(cornerRadius: 10))
                 .padding(.horizontal)
+
+                // Region / rank / map filters
+                ScrollView(.horizontal, showsIndicators: false) {
+                    HStack(spacing: 8) {
+                        Menu {
+                            ForEach(MetaRegion.allCases, id: \.self) { option in
+                                Button { region = option } label: { Text(option.displayName) }
+                            }
+                        } label: {
+                            MetaFilterLabel(icon: "globe") { Text(region.displayName) }
+                        }
+
+                        if selectedGamemode == .competitive {
+                            Menu {
+                                Button { division = nil } label: { Text("All Ranks") }
+                                ForEach(CompetitiveDivision.allCases, id: \.self) { option in
+                                    Button { division = option } label: { Text(option.displayName) }
+                                }
+                            } label: {
+                                MetaFilterLabel(icon: "rosette") {
+                                    if let division { Text(division.displayName) } else { Text("All Ranks") }
+                                }
+                            }
+                        }
+
+                        Menu {
+                            Button { mapKey = nil } label: { Text("All Maps") }
+                            ForEach(maps) { map in
+                                Button { mapKey = map.key } label: { Text(verbatim: map.name) }
+                            }
+                        } label: {
+                            MetaFilterLabel(icon: "map") {
+                                if let selectedMapName { Text(verbatim: selectedMapName) } else { Text("All Maps") }
+                            }
+                        }
+                    }
+                    .padding(.horizontal)
+                }
 
                 // Role filter
                 HStack(spacing: 8) {
@@ -64,13 +129,11 @@ struct HeroMetaView: View {
                         .font(.system(size: 13))
                         .foregroundStyle(.secondary)
                     Picker("Sort", selection: $sortBy) {
-                        ForEach(MetaSortOption.allCases, id: \.self) { option in
-                            Text(option.rawValue).tag(option)
+                        ForEach(sortOptions, id: \.self) { option in
+                            Text(option.title).tag(option)
                         }
                     }
                     .pickerStyle(.segmented)
-                    .frame(width: 200)
-                    Spacer()
                 }
                 .padding(.horizontal)
 
@@ -89,8 +152,11 @@ struct HeroMetaView: View {
                             rank: index + 1,
                             stat: stat,
                             heroInfo: viewModel.heroInfo(for: stat.hero),
+                            role: viewModel.heroRole(for: stat.hero),
                             portraitURL: viewModel.heroPortraitURL(for: stat.hero),
                             maxPickrate: filtered.compactMap(\.pickrate).max() ?? 1,
+                            maxBanrate: filtered.compactMap(\.banrate).max() ?? 1,
+                            showBanrate: hasBanrates,
                             sortBy: sortBy
                         )
                     }
@@ -102,26 +168,33 @@ struct HeroMetaView: View {
         .navigationTitle("Hero Meta")
         .navigationBarTitleDisplayMode(.inline)
         .task {
-            // Ensure heroes are loaded for portraits/names
-            if viewModel.heroes.isEmpty {
-                do {
-                    viewModel.heroes = try await OverwatchAPIService.shared.getHeroes()
-                } catch {}
+            await viewModel.ensureHeroesLoaded()
+            if maps.isEmpty, let all = try? await api.getMaps() {
+                maps = all
+                    .filter { !Self.standardMapModes.isDisjoint(with: $0.gamemodes ?? []) }
+                    .sorted { $0.name < $1.name }
             }
+        }
+        .task(id: filterKey) {
             await loadStats()
+        }
+        .onChange(of: hasBanrates) {
+            if !hasBanrates && sortBy == .banrate { sortBy = .pickrate }
         }
     }
 
     private var filteredAndSorted: [HeroGlobalStat] {
         var list = heroStats
         if let role = selectedRole {
-            list = list.filter { HeroRoles.role(for: $0.hero) == role }
+            list = list.filter { viewModel.heroRole(for: $0.hero) == role }
         }
         switch sortBy {
         case .pickrate:
             list.sort { ($0.pickrate ?? 0) > ($1.pickrate ?? 0) }
         case .winrate:
             list.sort { ($0.winrate ?? 0) > ($1.winrate ?? 0) }
+        case .banrate:
+            list.sort { ($0.banrate ?? 0) > ($1.banrate ?? 0) }
         }
         return list
     }
@@ -130,16 +203,62 @@ struct HeroMetaView: View {
         isLoading = true
         errorMessage = nil
         do {
-            heroStats = try await api.getHeroGlobalStats(platform: "pc", gamemode: selectedGamemode)
+            heroStats = try await api.getHeroGlobalStats(
+                gamemode: selectedGamemode,
+                region: region,
+                division: division?.rawValue,
+                map: mapKey
+            )
+        } catch is CancellationError {
+            return
         } catch {
-            errorMessage = error.localizedDescription
+            errorMessage = APIError.from(error).message
         }
         isLoading = false
     }
 }
 
+enum CompetitiveDivision: String, CaseIterable {
+    case bronze, silver, gold, platinum, emerald, diamond, master, grandmaster
+
+    var displayName: LocalizedStringKey {
+        switch self {
+        case .bronze: return "Bronze"
+        case .silver: return "Silver"
+        case .gold: return "Gold"
+        case .platinum: return "Platinum"
+        case .emerald: return "Emerald"
+        case .diamond: return "Diamond"
+        case .master: return "Master"
+        case .grandmaster: return "Grandmaster"
+        }
+    }
+}
+
+struct MetaFilterLabel<Title: View>: View {
+    let icon: String
+    @ViewBuilder let title: () -> Title
+
+    var body: some View {
+        HStack(spacing: 4) {
+            Image(systemName: icon)
+                .font(.system(size: 10))
+            title()
+                .font(.system(size: 12, weight: .medium))
+                .lineLimit(1)
+            Image(systemName: "chevron.down")
+                .font(.system(size: 8, weight: .bold))
+        }
+        .foregroundStyle(.primary)
+        .padding(.horizontal, 12)
+        .padding(.vertical, 7)
+        .background(.regularMaterial)
+        .clipShape(Capsule())
+    }
+}
+
 struct RoleFilterChip: View {
-    let label: String
+    let label: LocalizedStringKey
     let icon: String
     var isSelected: Bool
     var color: Color = .blue
@@ -166,8 +285,11 @@ struct MetaHeroRow: View {
     let rank: Int
     let stat: HeroGlobalStat
     let heroInfo: HeroInfo?
+    let role: String
     let portraitURL: URL?
     let maxPickrate: Double
+    let maxBanrate: Double
+    let showBanrate: Bool
     let sortBy: HeroMetaView.MetaSortOption
 
     var body: some View {
@@ -198,7 +320,9 @@ struct MetaHeroRow: View {
             VStack(alignment: .leading, spacing: 3) {
                 Text(heroInfo?.name ?? stat.hero.capitalized)
                     .font(.system(size: 14, weight: .semibold))
-                Text(HeroRoles.role(for: stat.hero).capitalized)
+                    .lineLimit(1)
+                    .minimumScaleFactor(0.8)
+                Text(roleName)
                     .font(.system(size: 10))
                     .foregroundStyle(.secondary)
             }
@@ -227,13 +351,26 @@ struct MetaHeroRow: View {
                             .font(.system(size: 8))
                             .foregroundStyle(.tertiary)
                     }
+
+                    if showBanrate {
+                        VStack(alignment: .trailing, spacing: 1) {
+                            Text(String(format: "%.1f%%", stat.banrate ?? 0))
+                                .font(.system(size: 13, weight: sortBy == .banrate ? .bold : .medium, design: .rounded))
+                                .foregroundStyle(sortBy == .banrate ? Color.purple : Color.secondary)
+                            Text("Ban")
+                                .font(.system(size: 8))
+                                .foregroundStyle(.tertiary)
+                        }
+                    }
                 }
 
                 // Bar
                 GeometryReader { geo in
-                    let ratio = sortBy == .pickrate
-                        ? CGFloat((stat.pickrate ?? 0) / maxPickrate)
-                        : CGFloat((stat.winrate ?? 0) / 100)
+                    let ratio: CGFloat = switch sortBy {
+                    case .pickrate: CGFloat((stat.pickrate ?? 0) / max(maxPickrate, 0.01))
+                    case .winrate: CGFloat((stat.winrate ?? 0) / 100)
+                    case .banrate: CGFloat((stat.banrate ?? 0) / max(maxBanrate, 0.01))
+                    }
                     RoundedRectangle(cornerRadius: 2)
                         .fill(barColor.opacity(0.4))
                         .frame(width: geo.size.width * min(1, ratio), height: 4)
@@ -241,6 +378,7 @@ struct MetaHeroRow: View {
                 }
                 .frame(width: 120, height: 4)
             }
+            .fixedSize()
         }
         .padding(.vertical, 8)
         .padding(.horizontal, 12)
@@ -249,7 +387,7 @@ struct MetaHeroRow: View {
     }
 
     private var roleColor: Color {
-        switch HeroRoles.role(for: stat.hero) {
+        switch role {
         case "tank": return .blue
         case "damage": return .red
         case "support": return .green
@@ -264,7 +402,20 @@ struct MetaHeroRow: View {
         return .red
     }
 
+    private var roleName: LocalizedStringKey {
+        switch role {
+        case "tank": return "Tank"
+        case "damage": return "DPS"
+        case "support": return "Support"
+        default: return LocalizedStringKey(role.capitalized)
+        }
+    }
+
     private var barColor: Color {
-        sortBy == .pickrate ? roleColor : winrateColor
+        switch sortBy {
+        case .pickrate: return roleColor
+        case .winrate: return winrateColor
+        case .banrate: return .purple
+        }
     }
 }

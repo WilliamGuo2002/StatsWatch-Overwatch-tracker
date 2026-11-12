@@ -207,3 +207,100 @@
 /* PvP Compare placeholders */
 "Player 1 BattleTag (Name#1234)" = "Jugador 1 BattleTag (Name#1234)";
 "Player 2 BattleTag (Name#1234)" = "Jugador 2 BattleTag (Name#1234)";
+
+/* Errors */
+"Invalid server response" = "Respuesta del servidor no válida";
+"Player not found. Check the BattleTag and try again." = "Jugador no encontrado. Revisa el BattleTag e inténtalo de nuevo.";
+"This player's profile is set to private." = "El perfil de este jugador es privado.";
+"Too many requests. Please wait a moment and try again." = "Demasiadas solicitudes. Espera un momento e inténtalo de nuevo.";
+"Server error (%lld). Please try again later." = "Error del servidor (%lld). Inténtalo más tarde.";
+"Failed to load data. Please try again later." = "No se pudieron cargar los datos. Inténtalo más tarde.";
+"Network error. Please check your connection and try again." = "Error de red. Comprueba tu conexión e inténtalo de nuevo.";
+"No players found for \"%@\"" = "No se encontraron jugadores para \"%@\"";
+
+/* Hero Meta, Records, Perks, Platform */
+"PC" = "PC";
+"Console" = "Consola";
+"Americas" = "América";
+"Europe" = "Europa";
+"Asia" = "Asia";
+"Ban Rate" = "Tasa de baneo";
+"Ban" = "Baneo";
+"All Ranks" = "Todos los rangos";
+"All Maps" = "Todos los mapas";
+"Emerald" = "Esmeralda";
+"Grandmaster" = "Gran maestro";
+"Hero Records" = "Récords de héroes";
+"No hero records available" = "No hay récords de héroes";
+"Time Played" = "Tiempo jugado";
+"Games Won" = "Partidas ganadas";
+"Best Accuracy in Game" = "Mejor precisión en partida";
+"Elims per Life" = "Elim. por vida";
+"Best Kill Streak" = "Mejor racha";
+"Best Multikill" = "Mejor multiasesinato";
+"Elims / 10 min" = "Elim. / 10 min";
+"Final Blows / 10 min" = "Golpes finales / 10 min";
+"Solo Kills / 10 min" = "Asesinatos en solitario / 10 min";
+"Objective Kills / 10 min" = "Elim. en objetivo / 10 min";
+"Objective Time / 10 min" = "Tiempo en objetivo / 10 min";
+"Hero Damage / 10 min" = "Daño a héroes / 10 min";
+"Healing / 10 min" = "Sanación / 10 min";
+"Fewest Deaths / 10 min" = "Menos muertes / 10 min";
+"Perks" = "Ventajas";
+"Minor Perks" = "Ventajas menores";
+"Major Perks" = "Ventajas mayores";
+"Stadium Powers" = "Poderes de Stadium";
+"Pick" = "Selec.";
+"Win" = "Vict.";
+
+/* Recent Summary, Rank History, Friends */
+"Recent Summary" = "Resumen reciente";
+"Today" = "Hoy";
+"This Week" = "Esta semana";
+"Compared with %@" = "Comparado con %@";
+"No new games since then" = "No hay partidas nuevas desde entonces";
+"W-L" = "V-D";
+"Your summary appears once a snapshot from before this period exists. Stats are saved each time you open this profile." = "El resumen aparecerá cuando exista una captura anterior a este período. Los datos se guardan cada vez que abres este perfil.";
+"Rank History" = "Historial de rango";
+"Rank history builds up as you check this profile on different days." = "El historial de rango se crea al consultar este perfil en días distintos.";
+"Champion" = "Campeón";
+"Hero Specific" = "Específico del héroe";
+"Friends Ranking" = "Ranking de amigos";
+"Failed to load" = "Error al cargar";
+
+/* Privacy, Battle.net, Friend Links */
+"This profile is private" = "Este perfil es privado";
+"The player has hidden their career profile in Overwatch, so their stats can't be viewed." = "El jugador ocultó su perfil en Overwatch, así que no se pueden ver sus estadísticas.";
+"No stats for this game mode yet" = "Aún no hay datos para este modo";
+"Private profile" = "Perfil privado";
+"Sign in with Battle.net" = "Iniciar sesión con Battle.net";
+"Battle.net sign-in failed. Please try again." = "No se pudo iniciar sesión con Battle.net. Inténtalo de nuevo.";
+"Added to Favorites" = "Añadido a favoritos";
+"OK" = "Aceptar";
+"My Profile" = "Mi perfil";
+"Unlink Battle.net" = "Desvincular Battle.net";
+"Scan with the iPhone Camera to add this player to Favorites in StatsWatch." = "Escanea con la cámara del iPhone para añadir a este jugador a favoritos en StatsWatch.";
+"Share Link" = "Compartir enlace";
+"Add Me as a Friend" = "Agrégame como amigo";
+
+/* In-app Feedback */
+"Send us a message" = "Envíanos un mensaje";
+"Category" = "Categoría";
+"General" = "General";
+"Bug" = "Error";
+"Feature" = "Función";
+"Tell us what you think about StatsWatch…" = "Cuéntanos qué opinas de StatsWatch…";
+"What happened, and what did you expect? Steps to reproduce help a lot." = "¿Qué pasó y qué esperabas? Los pasos para reproducirlo ayudan mucho.";
+"Describe your idea and how it would help players." = "Describe tu idea y cómo ayudaría a los jugadores.";
+"Your email (optional)" = "Tu correo (opcional)";
+"Only used if you'd like a reply." = "Solo se usa si quieres una respuesta.";
+"Include device info" = "Incluir información del dispositivo";
+"Send Feedback" = "Enviar comentarios";
+"Send" = "Enviar";
+"Thanks for your feedback!" = "¡Gracias por tus comentarios!";
+"Couldn't send feedback" = "No se pudieron enviar los comentarios";
+"Feedback is temporarily unavailable. Please try again later." = "Los comentarios no están disponibles por ahora. Inténtalo más tarde.";
+"Please check your connection and try again. Your message has been kept." = "Revisa tu conexión e inténtalo de nuevo. Tu mensaje se ha conservado.";
+"About & Support" = "Acerca de y soporte";
+"Tip via PayPal" = "Propina vía PayPal";
+"Player data is retrieved from publicly available profiles via the OverFast API. This app does not collect, store, or share any personal information beyond what is saved locally on your device, except feedback you choose to send." = "Los datos de jugadores se obtienen de perfiles públicos mediante la API de OverFast. Esta app no recopila, almacena ni comparte información personal más allá de lo guardado en tu dispositivo, salvo los comentarios que decidas enviar.";

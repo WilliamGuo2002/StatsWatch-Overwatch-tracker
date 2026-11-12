@@ -86,7 +86,7 @@ struct ShareCardView: View {
                 avatarImage = await downloadImage(url: url)
             }
             // Pre-download rank icons
-            if let ranks = viewModel.playerSummary?.competitive?.pc {
+            if let ranks = viewModel.displayedRanks {
                 let roleRanks: [(String, RankInfo?)] = [
                     ("tank", ranks.tank),
                     ("damage", ranks.damage),
@@ -151,7 +151,7 @@ struct ShareCardContent: View {
                         Text(viewModel.selectedMode == .competitive ? "Competitive" : "Quick Play")
                             .font(.system(size: 11))
                             .foregroundStyle(.white.opacity(0.6))
-                        if let season = viewModel.playerSummary?.competitive?.pc?.displaySeason {
+                        if let season = viewModel.displayedRanks?.displaySeason {
                             Text("S\(season)")
                                 .font(.system(size: 9, weight: .bold))
                                 .foregroundStyle(.orange)
@@ -178,7 +178,7 @@ struct ShareCardContent: View {
             Divider().background(Color.white.opacity(0.2))
 
             // Competitive ranks (only in competitive mode)
-            if viewModel.selectedMode == .competitive, let ranks = viewModel.playerSummary?.competitive?.pc {
+            if viewModel.selectedMode == .competitive, let ranks = viewModel.displayedRanks {
                 ShareRanksSection(ranks: ranks, rankIcons: rankIcons)
                 Divider().background(Color.white.opacity(0.2))
             }

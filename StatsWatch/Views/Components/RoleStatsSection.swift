@@ -15,7 +15,7 @@ struct RoleStatsSection: View {
             ScrollView(.horizontal, showsIndicators: false) {
                 HStack(spacing: 10) {
                     ForEach(viewModel.roleStats) { role in
-                        RoleCard(role: role)
+                        RoleCard(role: role, assistDeathRatio: viewModel.roleAssistDeathRatio(for: role.key))
                             .frame(width: roleCardWidth)
                     }
                 }
@@ -37,6 +37,7 @@ struct RoleStatsSection: View {
 
 struct RoleCard: View {
     let role: RoleWithStats
+    let assistDeathRatio: Double?
 
     var body: some View {
         VStack(spacing: 8) {
@@ -64,6 +65,14 @@ struct RoleCard: View {
                 RoleStatRow(label: "Games", value: "\(role.stats.gamesPlayed ?? 0)")
                 RoleStatRow(label: "WR", value: String(format: "%.1f%%", role.stats.winrate ?? 0))
                 RoleStatRow(label: "KDA", value: String(format: "%.2f", role.stats.kda ?? 0))
+                switch role.key {
+                case "tank", "damage":
+                    RoleStatRow(label: "KD", value: formatRatio(role.stats.killDeathRatio))
+                case "support":
+                    RoleStatRow(label: "AD", value: formatRatio(assistDeathRatio))
+                default:
+                    EmptyView()
+                }
             }
             .padding(.horizontal, 8)
             .padding(.bottom, 10)
@@ -75,6 +84,10 @@ struct RoleCard: View {
             RoundedRectangle(cornerRadius: 10)
                 .stroke(roleColor.opacity(0.3), lineWidth: 1)
         )
+    }
+
+    private func formatRatio(_ value: Double?) -> String {
+        value.map { String(format: "%.2f", $0) } ?? "-"
     }
 
     private var roleDisplayName: String {

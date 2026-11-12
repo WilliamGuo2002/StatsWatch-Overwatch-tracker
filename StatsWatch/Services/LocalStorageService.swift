@@ -7,6 +7,7 @@ class LocalStorageService {
     private let favoritesKey = "sw_favorites"
     private let historyKey = "sw_search_history"
     private let snapshotsKey = "sw_stat_snapshots"
+    private let rankSnapshotsKey = "sw_rank_snapshots"
     private let maxHistoryItems = 20
 
     // MARK: - Favorites
@@ -70,6 +71,32 @@ class LocalStorageService {
         guard !isDuplicate else { return }
         all.append(snapshot)
         save(all, forKey: snapshotsKey)
+    }
+
+    func getSnapshots(for playerId: String, gamemode: String) -> [StatSnapshot] {
+        getSnapshots(for: playerId).filter { $0.gamemode == gamemode }
+    }
+
+    // MARK: - Rank Snapshots
+    func getRankSnapshots(for playerId: String) -> [RankSnapshot] {
+        getAllRankSnapshots()
+            .filter { $0.playerId == playerId }
+            .sorted { $0.date < $1.date }
+    }
+
+    // Keeps one entry per player per day, overwritten by the latest rank seen that day.
+    func saveRankSnapshot(_ snapshot: RankSnapshot) {
+        guard !snapshot.scores.isEmpty else { return }
+        var all = getAllRankSnapshots()
+        let calendar = Calendar.current
+        all.removeAll { $0.playerId == snapshot.playerId && calendar.isDate($0.date, inSameDayAs: snapshot.date) }
+        all.append(snapshot)
+        save(all, forKey: rankSnapshotsKey)
+    }
+
+    private func getAllRankSnapshots() -> [RankSnapshot] {
+        guard let data = defaults.data(forKey: rankSnapshotsKey) else { return [] }
+        return (try? JSONDecoder().decode([RankSnapshot].self, from: data)) ?? []
     }
 
     private func getAllSnapshots() -> [StatSnapshot] {

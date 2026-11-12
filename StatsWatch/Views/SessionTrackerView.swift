@@ -107,7 +107,8 @@ struct SessionTrackerView: View {
         do {
             let freshStats = try await OverwatchAPIService.shared.getPlayerStatsSummary(
                 playerId: playerId,
-                gamemode: viewModel.selectedMode
+                gamemode: viewModel.selectedMode,
+                platform: viewModel.selectedPlatform
             )
             if let general = freshStats.general {
                 sessionEnd = makeSnapshot(from: general)

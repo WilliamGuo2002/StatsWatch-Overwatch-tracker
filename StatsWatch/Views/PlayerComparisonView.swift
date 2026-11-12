@@ -9,7 +9,7 @@ class PlayerComparisonViewModel {
     var player1Stats: PlayerStatsSummary?
     var player2Stats: PlayerStatsSummary?
     var isLoading = false
-    var errorMessage: String?
+    var errorMessage: LocalizedStringKey?
     var hasCompared = false
     var selectedMode: GameMode = .competitive
 
@@ -42,7 +42,7 @@ class PlayerComparisonViewModel {
             player2Stats = try await st2
             hasCompared = true
         } catch {
-            errorMessage = error.localizedDescription
+            errorMessage = APIError.from(error).message
         }
 
         isLoading = false

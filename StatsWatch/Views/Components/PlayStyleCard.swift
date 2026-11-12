@@ -142,10 +142,7 @@ struct PlayStyleAnalysis {
     }
 
     private var assists: Double {
-        if let role = selectedRole, let r = viewModel.statsSummary?.roles?[role] {
-            return r.average?.assists ?? 0
-        }
-        return viewModel.assistsPer10
+        viewModel.assistsPer10(for: selectedRole)
     }
 
     private var damage: Double {

@@ -1,4 +1,5 @@
 import Foundation
+import SwiftUI
 
 actor OverwatchAPIService {
     static let shared = OverwatchAPIService()
@@ -26,33 +27,76 @@ actor OverwatchAPIService {
     }
 
     // MARK: - Player Stats Summary
-    func getPlayerStatsSummary(playerId: String, gamemode: GameMode = .quickplay) async throws -> PlayerStatsSummary {
-        let url = URL(string: "\(baseURL)/players/\(playerId)/stats/summary?gamemode=\(gamemode.rawValue)")!
+    func getPlayerStatsSummary(playerId: String, gamemode: GameMode = .quickplay, platform: Platform? = nil) async throws -> PlayerStatsSummary {
+        let url = makeURL("/players/\(playerId)/stats/summary", [
+            "gamemode": gamemode.rawValue,
+            "platform": platform?.rawValue,
+        ])
         return try await fetch(url: url)
+    }
+
+    // MARK: - Privacy
+    // Search results carry an is_public flag; fall back to "summary loads but no stats in any mode".
+    func isProfilePrivate(playerId: String, summary: PlayerSummary?) async -> Bool {
+        let name = playerId.split(separator: "-").dropLast().joined(separator: "-")
+        if let results = try? await searchPlayers(name: name.isEmpty ? playerId : name).results,
+           let match = results.first(where: { $0.playerId == playerId || ($0.avatar != nil && $0.avatar == summary?.avatar) }),
+           let isPublic = match.isPublic {
+            return !isPublic
+        }
+        let allModes: PlayerStatsSummary? = try? await fetch(url: makeURL("/players/\(playerId)/stats/summary", [:]))
+        return allModes?.general == nil
     }
 
     // MARK: - Heroes List
-    func getHeroes() async throws -> [HeroInfo] {
-        let url = URL(string: "\(baseURL)/heroes")!
-        return try await fetch(url: url)
+    func getHeroes(locale: String) async throws -> [HeroInfo] {
+        try await fetch(url: makeURL("/heroes", ["locale": locale]))
     }
 
     // MARK: - Hero Detail
-    func getHeroDetail(heroKey: String) async throws -> HeroDetail {
-        let url = URL(string: "\(baseURL)/heroes/\(heroKey)")!
-        return try await fetch(url: url)
+    func getHeroDetail(heroKey: String, locale: String) async throws -> HeroDetail {
+        try await fetch(url: makeURL("/heroes/\(heroKey)", ["locale": locale]))
     }
 
     // MARK: - Hero Global Stats
-    func getHeroGlobalStats(platform: String = "pc", gamemode: String = "competitive") async throws -> [HeroGlobalStat] {
-        let url = URL(string: "\(baseURL)/heroes/stats?platform=\(platform)&gamemode=\(gamemode)")!
+    func getHeroGlobalStats(
+        platform: Platform = .pc,
+        gamemode: GameMode = .competitive,
+        region: MetaRegion,
+        division: String? = nil,
+        map: String? = nil
+    ) async throws -> [HeroGlobalStat] {
+        let url = makeURL("/heroes/stats", [
+            "platform": platform.rawValue,
+            "gamemode": gamemode.rawValue,
+            "region": region.rawValue,
+            "competitive_division": gamemode == .competitive ? division : nil,
+            "map": map,
+        ])
         return try await fetch(url: url)
     }
 
     // MARK: - Player Career Stats
-    func getPlayerCareerStats(playerId: String, gamemode: GameMode = .competitive) async throws -> [String: [CareerStatCategory]] {
-        let url = URL(string: "\(baseURL)/players/\(playerId)/stats/career?gamemode=\(gamemode.rawValue)")!
+    func getPlayerCareerStats(playerId: String, gamemode: GameMode = .competitive, platform: Platform? = nil) async throws -> [String: [CareerStatCategory]] {
+        let url = makeURL("/players/\(playerId)/stats", [
+            "gamemode": gamemode.rawValue,
+            "platform": platform?.rawValue,
+        ])
         return try await fetch(url: url)
+    }
+
+    // MARK: - Hero Comparisons
+    func getHeroComparisons(playerId: String, gamemode: GameMode, platform: Platform?) async throws -> [String: HeroComparisonMetric] {
+        let url = makeURL("/players/\(playerId)", [
+            "gamemode": gamemode.rawValue,
+            "platform": platform?.rawValue,
+        ])
+        let response: PlayerFullResponse = try await fetch(url: url)
+        let platformStats = platform == .console
+            ? response.stats?.console
+            : (response.stats?.pc ?? response.stats?.console)
+        let modeStats = gamemode == .competitive ? platformStats?.competitive : platformStats?.quickplay
+        return modeStats?.heroesComparisons ?? [:]
     }
 
     // MARK: - Maps
@@ -67,6 +111,13 @@ actor OverwatchAPIService {
         return try await fetch(url: url)
     }
 
+    private func makeURL(_ path: String, _ query: [String: String?]) -> URL {
+        var components = URLComponents(string: baseURL + path)!
+        let items = query.compactMap { key, value in value.map { URLQueryItem(name: key, value: $0) } }
+        components.queryItems = items.isEmpty ? nil : items.sorted { $0.name < $1.name }
+        return components.url!
+    }
+
     // MARK: - Generic Fetch
     private func fetch<T: Decodable>(url: URL) async throws -> T {
         let (data, response) = try await session.data(from: url)
@@ -78,9 +129,6 @@ actor OverwatchAPIService {
         guard (200...299).contains(httpResponse.statusCode) else {
             if httpResponse.statusCode == 404 {
                 throw APIError.playerNotFound
-            }
-            if httpResponse.statusCode == 422 {
-                throw APIError.profilePrivate
             }
             if httpResponse.statusCode == 429 {
                 throw APIError.rateLimited
@@ -97,28 +145,32 @@ actor OverwatchAPIService {
     }
 }
 
-enum APIError: LocalizedError {
+enum APIError: Error {
     case invalidResponse
     case playerNotFound
-    case profilePrivate
     case rateLimited
     case serverError(Int)
     case decodingError(String)
+    case network
 
-    var errorDescription: String? {
+    static func from(_ error: Error) -> APIError {
+        (error as? APIError) ?? .network
+    }
+
+    var message: LocalizedStringKey {
         switch self {
         case .invalidResponse:
             return "Invalid server response"
         case .playerNotFound:
             return "Player not found. Check the BattleTag and try again."
-        case .profilePrivate:
-            return "This player's profile is set to private."
         case .rateLimited:
             return "Too many requests. Please wait a moment and try again."
         case .serverError(let code):
             return "Server error (\(code)). Please try again later."
-        case .decodingError(let msg):
-            return "Failed to parse data: \(msg)"
+        case .decodingError:
+            return "Failed to load data. Please try again later."
+        case .network:
+            return "Network error. Please check your connection and try again."
         }
     }
 }

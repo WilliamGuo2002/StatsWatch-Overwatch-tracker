@@ -206,3 +206,100 @@
 "Scan to tip via WeChat / Alipay" = "Scan to tip via WeChat / Alipay";
 "Data provided by OverFast API" = "Data provided by OverFast API";
 "Made with ❤️ for the Overwatch community" = "Made with ❤️ for the Overwatch community";
+
+/* Errors */
+"Invalid server response" = "Invalid server response";
+"Player not found. Check the BattleTag and try again." = "Player not found. Check the BattleTag and try again.";
+"This player's profile is set to private." = "This player's profile is set to private.";
+"Too many requests. Please wait a moment and try again." = "Too many requests. Please wait a moment and try again.";
+"Server error (%lld). Please try again later." = "Server error (%lld). Please try again later.";
+"Failed to load data. Please try again later." = "Failed to load data. Please try again later.";
+"Network error. Please check your connection and try again." = "Network error. Please check your connection and try again.";
+"No players found for \"%@\"" = "No players found for \"%@\"";
+
+/* Hero Meta, Records, Perks, Platform */
+"PC" = "PC";
+"Console" = "Console";
+"Americas" = "Americas";
+"Europe" = "Europe";
+"Asia" = "Asia";
+"Ban Rate" = "Ban Rate";
+"Ban" = "Ban";
+"All Ranks" = "All Ranks";
+"All Maps" = "All Maps";
+"Emerald" = "Emerald";
+"Grandmaster" = "Grandmaster";
+"Hero Records" = "Hero Records";
+"No hero records available" = "No hero records available";
+"Time Played" = "Time Played";
+"Games Won" = "Games Won";
+"Best Accuracy in Game" = "Best Accuracy in Game";
+"Elims per Life" = "Elims per Life";
+"Best Kill Streak" = "Best Kill Streak";
+"Best Multikill" = "Best Multikill";
+"Elims / 10 min" = "Elims / 10 min";
+"Final Blows / 10 min" = "Final Blows / 10 min";
+"Solo Kills / 10 min" = "Solo Kills / 10 min";
+"Objective Kills / 10 min" = "Objective Kills / 10 min";
+"Objective Time / 10 min" = "Objective Time / 10 min";
+"Hero Damage / 10 min" = "Hero Damage / 10 min";
+"Healing / 10 min" = "Healing / 10 min";
+"Fewest Deaths / 10 min" = "Fewest Deaths / 10 min";
+"Perks" = "Perks";
+"Minor Perks" = "Minor Perks";
+"Major Perks" = "Major Perks";
+"Stadium Powers" = "Stadium Powers";
+"Pick" = "Pick";
+"Win" = "Win";
+
+/* Recent Summary, Rank History, Friends */
+"Recent Summary" = "Recent Summary";
+"Today" = "Today";
+"This Week" = "This Week";
+"Compared with %@" = "Compared with %@";
+"No new games since then" = "No new games since then";
+"W-L" = "W-L";
+"Your summary appears once a snapshot from before this period exists. Stats are saved each time you open this profile." = "Your summary appears once a snapshot from before this period exists. Stats are saved each time you open this profile.";
+"Rank History" = "Rank History";
+"Rank history builds up as you check this profile on different days." = "Rank history builds up as you check this profile on different days.";
+"Champion" = "Champion";
+"Hero Specific" = "Hero Specific";
+"Friends Ranking" = "Friends Ranking";
+"Failed to load" = "Failed to load";
+
+/* Privacy, Battle.net, Friend Links */
+"This profile is private" = "This profile is private";
+"The player has hidden their career profile in Overwatch, so their stats can't be viewed." = "The player has hidden their career profile in Overwatch, so their stats can't be viewed.";
+"No stats for this game mode yet" = "No stats for this game mode yet";
+"Private profile" = "Private profile";
+"Sign in with Battle.net" = "Sign in with Battle.net";
+"Battle.net sign-in failed. Please try again." = "Battle.net sign-in failed. Please try again.";
+"Added to Favorites" = "Added to Favorites";
+"OK" = "OK";
+"My Profile" = "My Profile";
+"Unlink Battle.net" = "Unlink Battle.net";
+"Scan with the iPhone Camera to add this player to Favorites in StatsWatch." = "Scan with the iPhone Camera to add this player to Favorites in StatsWatch.";
+"Share Link" = "Share Link";
+"Add Me as a Friend" = "Add Me as a Friend";
+
+/* In-app Feedback */
+"Send us a message" = "Send us a message";
+"Category" = "Category";
+"General" = "General";
+"Bug" = "Bug";
+"Feature" = "Feature";
+"Tell us what you think about StatsWatch…" = "Tell us what you think about StatsWatch…";
+"What happened, and what did you expect? Steps to reproduce help a lot." = "What happened, and what did you expect? Steps to reproduce help a lot.";
+"Describe your idea and how it would help players." = "Describe your idea and how it would help players.";
+"Your email (optional)" = "Your email (optional)";
+"Only used if you'd like a reply." = "Only used if you'd like a reply.";
+"Include device info" = "Include device info";
+"Send Feedback" = "Send Feedback";
+"Send" = "Send";
+"Thanks for your feedback!" = "Thanks for your feedback!";
+"Couldn't send feedback" = "Couldn't send feedback";
+"Feedback is temporarily unavailable. Please try again later." = "Feedback is temporarily unavailable. Please try again later.";
+"Please check your connection and try again. Your message has been kept." = "Please check your connection and try again. Your message has been kept.";
+"About & Support" = "About & Support";
+"Tip via PayPal" = "Tip via PayPal";
+"Player data is retrieved from publicly available profiles via the OverFast API. This app does not collect, store, or share any personal information beyond what is saved locally on your device, except feedback you choose to send." = "Player data is retrieved from publicly available profiles via the OverFast API. This app does not collect, store, or share any personal information beyond what is saved locally on your device, except feedback you choose to send.";

@@ -1,74 +1,14 @@
 import SwiftUI
-import MessageUI
 
 struct FeedbackTipView: View {
     @Environment(\.openURL) private var openURL
-    @State private var mailType: MailType?
-    @State private var showMailUnavailable = false
+    @State private var composeCategory: FeedbackCategory?
 
-    private let contactEmail = "wgstudiosupport@gmail.com"
     private let paypalURL = "https://paypal.me/wg1018"
     private let appStoreURL = ""        // TODO: fill in
 
-    enum MailType: Identifiable {
-        case general, bug, feature
-        var id: Int { hashValue }
-
-        var subject: String {
-            switch self {
-            case .general: return "[StatsWatch] General Feedback"
-            case .bug:     return "[StatsWatch] Bug Report"
-            case .feature: return "[StatsWatch] Feature Request"
-            }
-        }
-
-        var bodyTemplate: String {
-            switch self {
-            case .general:
-                return "\n\n--- Device Info ---\n\(Self.deviceInfo)"
-            case .bug:
-                return """
-
-
-                **What happened:**
-                (Describe the bug)
-
-                **Steps to reproduce:**
-                1.
-                2.
-                3.
-
-                **Expected behavior:**
-                (What should have happened)
-
-                --- Device Info ---
-                \(Self.deviceInfo)
-                """
-            case .feature:
-                return """
-
-
-                **Feature description:**
-                (Describe your idea)
-
-                **Why it would be useful:**
-                (How it helps players)
-
-                --- Device Info ---
-                \(Self.deviceInfo)
-                """
-            }
-        }
-
-        private static var deviceInfo: String {
-            let device = UIDevice.current
-            return """
-            App: StatsWatch v1.0.0
-            iOS: \(device.systemVersion)
-            Device: \(device.model)
-            Language: \(Locale.preferredLanguages.first ?? "unknown")
-            """
-        }
+    private var appVersion: String {
+        Bundle.main.infoDictionary?["CFBundleShortVersionString"] as? String ?? ""
     }
 
     var body: some View {
@@ -93,7 +33,7 @@ struct FeedbackTipView: View {
                         .font(.system(size: 14))
                         .foregroundStyle(.secondary)
 
-                    Text("v1.0.0")
+                    Text(verbatim: "v\(appVersion)")
                         .font(.system(size: 11, weight: .medium, design: .monospaced))
                         .foregroundStyle(.tertiary)
                 }
@@ -112,10 +52,10 @@ struct FeedbackTipView: View {
                     FeedbackRow(
                         icon: "envelope.fill",
                         title: String(localized: "Contact Developer"),
-                        subtitle: contactEmail,
+                        subtitle: String(localized: "Send us a message"),
                         color: .blue
                     ) {
-                        sendMail(.general)
+                        composeCategory = .general
                     }
 
                     FeedbackRow(
@@ -124,7 +64,7 @@ struct FeedbackTipView: View {
                         subtitle: String(localized: "Help us improve the app"),
                         color: .red
                     ) {
-                        sendMail(.bug)
+                        composeCategory = .bug
                     }
 
                     FeedbackRow(
@@ -133,7 +73,7 @@ struct FeedbackTipView: View {
                         subtitle: String(localized: "We'd love to hear your ideas"),
                         color: .yellow
                     ) {
-                        sendMail(.feature)
+                        composeCategory = .feature
                     }
 
                     FeedbackRow(
@@ -209,7 +149,7 @@ struct FeedbackTipView: View {
                             .multilineTextAlignment(.center)
                             .fixedSize(horizontal: false, vertical: true)
 
-                        Text("Player data is retrieved from publicly available profiles via the OverFast API. This app does not collect, store, or share any personal information beyond what is saved locally on your device.")
+                        Text("Player data is retrieved from publicly available profiles via the OverFast API. This app does not collect, store, or share any personal information beyond what is saved locally on your device, except feedback you choose to send.")
                             .font(.system(size: 9))
                             .foregroundStyle(.tertiary)
                             .multilineTextAlignment(.center)
@@ -233,58 +173,10 @@ struct FeedbackTipView: View {
         }
         .navigationTitle("About & Support")
         .navigationBarTitleDisplayMode(.inline)
-        .sheet(item: $mailType) { type in
-            MailComposeView(
-                to: contactEmail,
-                subject: type.subject,
-                body: type.bodyTemplate
-            )
-        }
-        .alert("Cannot Send Email", isPresented: $showMailUnavailable) {
-            Button("Copy Email Address") {
-                UIPasteboard.general.string = contactEmail
+        .sheet(item: $composeCategory) { category in
+            NavigationStack {
+                FeedbackComposeView(category: category)
             }
-            Button("OK", role: .cancel) {}
-        } message: {
-            Text("Mail is not set up on this device. You can email us at \(contactEmail)")
-        }
-    }
-
-    private func sendMail(_ type: MailType) {
-        if MFMailComposeViewController.canSendMail() {
-            mailType = type
-        } else {
-            showMailUnavailable = true
-        }
-    }
-}
-
-// MARK: - Mail Compose
-struct MailComposeView: UIViewControllerRepresentable {
-    let to: String
-    let subject: String
-    let body: String
-    @Environment(\.dismiss) private var dismiss
-
-    func makeUIViewController(context: Context) -> MFMailComposeViewController {
-        let vc = MFMailComposeViewController()
-        vc.mailComposeDelegate = context.coordinator
-        vc.setToRecipients([to])
-        vc.setSubject(subject)
-        vc.setMessageBody(body, isHTML: false)
-        return vc
-    }
-
-    func updateUIViewController(_ uiViewController: MFMailComposeViewController, context: Context) {}
-
-    func makeCoordinator() -> Coordinator { Coordinator(dismiss: dismiss) }
-
-    class Coordinator: NSObject, MFMailComposeViewControllerDelegate {
-        let dismiss: DismissAction
-        init(dismiss: DismissAction) { self.dismiss = dismiss }
-
-        func mailComposeController(_ controller: MFMailComposeViewController, didFinishWith result: MFMailComposeResult, error: Error?) {
-            dismiss()
         }
     }
 }

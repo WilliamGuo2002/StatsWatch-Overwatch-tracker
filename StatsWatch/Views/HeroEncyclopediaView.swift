@@ -5,15 +5,11 @@ struct HeroEncyclopediaListView: View {
     let viewModel: PlayerViewModel
     @State private var selectedRole: String? = nil
     @State private var searchText = ""
-    @State private var localHeroes: [HeroInfo] = []
     @State private var isLoading = true
 
     private let api = OverwatchAPIService.shared
 
-    private var allHeroes: [HeroInfo] {
-        // Use viewModel.heroes if available, otherwise local fetch
-        viewModel.heroes.isEmpty ? localHeroes : viewModel.heroes
-    }
+    private var allHeroes: [HeroInfo] { viewModel.heroes }
 
     private var filteredHeroes: [HeroInfo] {
         var list = allHeroes
@@ -85,18 +81,10 @@ struct HeroEncyclopediaListView: View {
         .navigationTitle("Hero Encyclopedia")
         .navigationBarTitleDisplayMode(.inline)
         .task {
-            if allHeroes.isEmpty {
-                do {
-                    let fetched = try await api.getHeroes()
-                    if viewModel.heroes.isEmpty {
-                        localHeroes = fetched
-                    }
-                } catch {}
-            }
-            // Also load global stats if not loaded
+            await viewModel.ensureHeroesLoaded()
             if viewModel.heroGlobalStats.isEmpty {
                 do {
-                    viewModel.heroGlobalStats = try await api.getHeroGlobalStats()
+                    viewModel.heroGlobalStats = try await api.getHeroGlobalStats(region: .preferred)
                 } catch {}
             }
             isLoading = false
@@ -163,7 +151,7 @@ struct HeroEncyclopediaDetailView: View {
     let viewModel: PlayerViewModel
     @State private var heroDetail: HeroDetail?
     @State private var isLoading = true
-    @State private var errorMessage: String?
+    @State private var errorMessage: LocalizedStringKey?
 
     private let api = OverwatchAPIService.shared
 
@@ -195,6 +183,16 @@ struct HeroEncyclopediaDetailView: View {
                     // Abilities
                     if let abilities = detail.abilities, !abilities.isEmpty {
                         AbilitiesSection(abilities: abilities)
+                    }
+
+                    // Perks
+                    if let perks = detail.perks, !(perks.minor ?? []).isEmpty || !(perks.major ?? []).isEmpty {
+                        PerksSection(perks: perks)
+                    }
+
+                    // Stadium Powers
+                    if let powers = detail.stadiumPowers, !powers.isEmpty {
+                        StadiumPowersSection(powers: powers)
                     }
 
                     // Story
@@ -237,9 +235,9 @@ struct HeroEncyclopediaDetailView: View {
         isLoading = true
         errorMessage = nil
         do {
-            heroDetail = try await api.getHeroDetail(heroKey: heroKey)
+            heroDetail = try await api.getHeroDetail(heroKey: heroKey, locale: APILocale.current)
         } catch {
-            errorMessage = error.localizedDescription
+            errorMessage = APIError.from(error).message
         }
         isLoading = false
     }
@@ -275,6 +273,9 @@ struct HeroEncyclopediaHeader: View {
             HStack(spacing: 16) {
                 if let role = detail.role {
                     InfoChip(icon: roleIcon, text: role.capitalized, color: roleColor)
+                }
+                if let subrole = detail.subrole ?? hero.subrole {
+                    InfoChip(icon: "tag.fill", text: subrole.capitalized, color: .teal)
                 }
                 if let location = detail.location {
                     InfoChip(icon: "mappin", text: location, color: .orange)
@@ -520,5 +521,115 @@ struct StorySection: View {
             .clipShape(RoundedRectangle(cornerRadius: 12))
             .padding(.horizontal)
         }
+    }
+}
+
+struct PerksSection: View {
+    let perks: HeroPerks
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 10) {
+            HStack {
+                Image(systemName: "star.circle.fill")
+                    .foregroundStyle(.yellow)
+                Text("Perks")
+                    .font(.system(size: 16, weight: .bold))
+            }
+            .padding(.horizontal)
+
+            if let minor = perks.minor, !minor.isEmpty {
+                PerkGroup(title: "Minor Perks", powers: minor, color: .teal)
+            }
+            if let major = perks.major, !major.isEmpty {
+                PerkGroup(title: "Major Perks", powers: major, color: .orange)
+            }
+        }
+    }
+}
+
+struct PerkGroup: View {
+    let title: LocalizedStringKey
+    let powers: [HeroPower]
+    let color: Color
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 8) {
+            Text(title)
+                .font(.system(size: 12, weight: .semibold))
+                .foregroundStyle(color)
+                .padding(.horizontal)
+            ForEach(powers) { power in
+                HeroPowerRow(power: power, color: color)
+            }
+        }
+    }
+}
+
+struct StadiumPowersSection: View {
+    let powers: [HeroPower]
+    @State private var isExpanded = false
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 10) {
+            Button {
+                withAnimation(.easeInOut(duration: 0.2)) { isExpanded.toggle() }
+            } label: {
+                HStack {
+                    Image(systemName: "building.columns.fill")
+                        .foregroundStyle(.purple)
+                    Text("Stadium Powers")
+                        .font(.system(size: 16, weight: .bold))
+                        .foregroundStyle(.primary)
+                    Text("\(powers.count)")
+                        .font(.system(size: 12, weight: .semibold))
+                        .foregroundStyle(.secondary)
+                    Spacer()
+                    Image(systemName: isExpanded ? "chevron.up" : "chevron.down")
+                        .font(.system(size: 11))
+                        .foregroundStyle(.secondary)
+                }
+                .padding(.horizontal)
+            }
+
+            if isExpanded {
+                ForEach(powers) { power in
+                    HeroPowerRow(power: power, color: .purple)
+                }
+            }
+        }
+    }
+}
+
+struct HeroPowerRow: View {
+    let power: HeroPower
+    let color: Color
+
+    var body: some View {
+        HStack(alignment: .top, spacing: 12) {
+            AsyncImage(url: URL(string: power.icon ?? "")) { image in
+                image.resizable().scaledToFit().padding(4)
+            } placeholder: {
+                Color.clear
+            }
+            .frame(width: 36, height: 36)
+            .background(color.opacity(0.85))
+            .clipShape(RoundedRectangle(cornerRadius: 8))
+
+            VStack(alignment: .leading, spacing: 4) {
+                Text(power.name ?? "")
+                    .font(.system(size: 13, weight: .semibold))
+                if let description = power.description, !description.isEmpty {
+                    Text(description)
+                        .font(.system(size: 12))
+                        .foregroundStyle(.secondary)
+                        .fixedSize(horizontal: false, vertical: true)
+                }
+            }
+            Spacer(minLength: 0)
+        }
+        .padding(12)
+        .background(.regularMaterial)
+        .clipShape(RoundedRectangle(cornerRadius: 10))
+        .padding(.horizontal)
     }
 }

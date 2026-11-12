@@ -179,23 +179,28 @@ struct WidgetStatItem: View {
     }
 }
 
+struct StatsWatchWidgetEntryView: View {
+    @Environment(\.widgetFamily) private var family
+    let entry: StatsWatchEntry
+
+    var body: some View {
+        switch family {
+        case .systemMedium:
+            MediumWidgetView(entry: entry)
+        default:
+            SmallWidgetView(entry: entry)
+        }
+    }
+}
+
 // MARK: - Widget Configuration
 struct StatsWatchWidget: Widget {
     let kind: String = "StatsWatchWidget"
 
     var body: some WidgetConfiguration {
         StaticConfiguration(kind: kind, provider: StatsWatchProvider()) { entry in
-            if #available(iOS 17.0, *) {
-                Group {
-                    // Will be selected based on widget family
-                    SmallWidgetView(entry: entry)
-                }
+            StatsWatchWidgetEntryView(entry: entry)
                 .containerBackground(.fill.tertiary, for: .widget)
-            } else {
-                SmallWidgetView(entry: entry)
-                    .padding()
-                    .background()
-            }
         }
         .configurationDisplayName("StatsWatch")
         .description("View your Overwatch stats at a glance")
