@@ -304,3 +304,4 @@
 "About & Support" = "アプリについて・サポート";
 "Tip via PayPal" = "PayPalでチップを送る";
 "Player data is retrieved from publicly available profiles via the OverFast API. This app does not collect, store, or share any personal information beyond what is saved locally on your device, except feedback you choose to send." = "プレイヤーデータはOverFast APIを通じて公開プロフィールから取得しています。ご自身で送信したフィードバックを除き、本アプリは個人情報を収集・保存・共有せず、データは端末内にのみ保存されます。";
+"Enter at least 5 characters" = "5文字以上入力してください";

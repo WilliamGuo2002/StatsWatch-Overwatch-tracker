@@ -304,3 +304,4 @@
 "About & Support" = "关于与支持";
 "Tip via PayPal" = "通过 PayPal 打赏";
 "Player data is retrieved from publicly available profiles via the OverFast API. This app does not collect, store, or share any personal information beyond what is saved locally on your device, except feedback you choose to send." = "玩家数据来自 OverFast API 提供的公开资料。除你主动发送的反馈外，本应用不会收集、存储或分享任何个人信息，所有数据仅保存在你的设备上。";
+"Enter at least 5 characters" = "至少输入 5 个字";

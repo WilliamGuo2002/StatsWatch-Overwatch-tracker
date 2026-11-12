@@ -42,8 +42,14 @@ struct FeedbackComposeView: View {
                         .frame(minHeight: 180)
                 }
             } footer: {
-                Text(verbatim: "\(trimmedMessage.count)/4000")
-                    .frame(maxWidth: .infinity, alignment: .trailing)
+                HStack {
+                    if trimmedMessage.count < 5 {
+                        Text("Enter at least 5 characters")
+                            .foregroundStyle(trimmedMessage.isEmpty ? Color.secondary : Color.orange)
+                    }
+                    Spacer()
+                    Text(verbatim: "\(trimmedMessage.count)/4000")
+                }
             }
 
             Section {

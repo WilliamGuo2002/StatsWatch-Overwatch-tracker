@@ -304,3 +304,4 @@
 "About & Support" = "Acerca de y soporte";
 "Tip via PayPal" = "Propina vía PayPal";
 "Player data is retrieved from publicly available profiles via the OverFast API. This app does not collect, store, or share any personal information beyond what is saved locally on your device, except feedback you choose to send." = "Los datos de jugadores se obtienen de perfiles públicos mediante la API de OverFast. Esta app no recopila, almacena ni comparte información personal más allá de lo guardado en tu dispositivo, salvo los comentarios que decidas enviar.";
+"Enter at least 5 characters" = "Escribe al menos 5 caracteres";
