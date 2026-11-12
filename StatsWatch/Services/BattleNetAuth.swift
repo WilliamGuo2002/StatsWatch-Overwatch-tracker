@@ -10,7 +10,7 @@ enum BattleNetAuth {
         case failed(String)
     }
 
-    static var isConfigured: Bool { BackendConfig.isConfigured }
+    static var isConfigured: Bool { BackendConfig.isConfigured && BackendConfig.battleNetSignInEnabled }
 
     /// Returns the signed-in player's BattleTag ("Name#1234").
     static func signIn(using session: WebAuthenticationSession) async throws -> String {
