@@ -32,7 +32,7 @@ struct StatsWatchProvider: TimelineProvider {
     }
 
     private func loadWidgetData() -> WidgetPlayerData? {
-        let defaults = UserDefaults(suiteName: "group.WilliamGuo.StatsWatch")
+        let defaults = UserDefaults(suiteName: "group.com.wgstudio.statswatch.k7q2")
         guard let data = defaults?.data(forKey: "widget_player_data") else { return nil }
         return try? JSONDecoder().decode(WidgetPlayerData.self, from: data)
     }

@@ -197,7 +197,7 @@ struct PlayerProfileView: View {
                     updatedAt: Date()
                 )
                 if let data = try? JSONEncoder().encode(widgetData) {
-                    UserDefaults(suiteName: "group.WilliamGuo.StatsWatch")?.set(data, forKey: "widget_player_data")
+                    UserDefaults(suiteName: "group.com.wgstudio.statswatch.k7q2")?.set(data, forKey: "widget_player_data")
                     WidgetCenter.shared.reloadAllTimelines()
                 }
             }

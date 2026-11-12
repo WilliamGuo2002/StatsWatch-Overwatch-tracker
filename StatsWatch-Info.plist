@@ -6,7 +6,7 @@
 	<array>
 		<dict>
 			<key>CFBundleURLName</key>
-			<string>WilliamGuo.StatsWatch</string>
+			<string>com.wgstudio.statswatch</string>
 			<key>CFBundleURLSchemes</key>
 			<array>
 				<string>statswatch</string>
