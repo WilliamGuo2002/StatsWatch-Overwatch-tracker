@@ -6,7 +6,7 @@ compatibility_date = "2025-06-01"
 # Battle.net sign-in: your client ID (public) and this worker's callback URL.
 # The same callback URL must be registered as a Redirect URL on develop.battle.net.
 BNET_CLIENT_ID = ""
-REDIRECT_URI = "https://statswatch-worker.<your-subdomain>.workers.dev/callback"
+REDIRECT_URI = "https://statswatch-worker.statswatch-worker.workers.dev/callback"
 
 # Optional sender for feedback mail. Leave unset to use Resend's test sender,
 # which can only deliver to the email address of your own Resend account.
